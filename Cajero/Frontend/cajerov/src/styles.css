@@ -169,7 +169,22 @@ body {
     0 0 0 1px rgba(0,0,0,0.5) inset,
     0 0 40px rgba(34,197,94,0.03) inset;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.screen::-webkit-scrollbar {
+  width: 3px;
+}
+.screen::-webkit-scrollbar-track {
+  background: transparent;
+}
+.screen::-webkit-scrollbar-thumb {
+  background: rgba(34,197,94,0.25);
+  border-radius: 2px;
+}
+.screen::-webkit-scrollbar-thumb:hover {
+  background: rgba(34,197,94,0.5);
 }
 
 /* Escanline sutil */
@@ -214,22 +229,6 @@ body {
   gap: 14px;
   animation: enter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.view::-webkit-scrollbar {
-  width: 3px;
-}
-.view::-webkit-scrollbar-track {
-  background: transparent;
-}
-.view::-webkit-scrollbar-thumb {
-  background: rgba(34,197,94,0.2);
-  border-radius: 2px;
-}
-.view::-webkit-scrollbar-thumb:hover {
-  background: rgba(34,197,94,0.4);
 }
 
 @keyframes enter {
