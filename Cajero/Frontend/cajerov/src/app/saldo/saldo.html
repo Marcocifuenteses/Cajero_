@@ -1,0 +1,45 @@
+<div class="view">
+  @if (cargando()) { <div class="loading-bar"></div> }
+  <div class="eyebrow">Saldo</div>
+  <div class="title">Tus cuentas, {{ firstName }}</div>
+  <div class="subtitle">Resumen del saldo disponible.</div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="loading">Cargando...</p>
+  }
+
+  @if (!cargando() && cuentas().length > 0) {
+    <div class="account-list">
+      @for (cuenta of cuentas(); track cuenta.id) {
+        <div class="account-card" [class.inactive]="!cuenta.activa">
+          <div class="account-left">
+            <div class="account-type">{{ cuenta.tipo_cuenta || 'Cuenta' }}</div>
+            @if (cuenta.numero_cuenta) {
+              <div class="account-num">{{ cuenta.numero_cuenta }}</div>
+            }
+            @if (!cuenta.activa) {
+              <div class="account-badge">Inactiva</div>
+            }
+          </div>
+          <div class="account-right">
+            <div class="account-currency">{{ cuenta.moneda || 'GTQ' }}</div>
+            <div class="account-saldo">Q {{ cuenta.saldo | number:'1.2-2' }}</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="total-row">
+      <span class="total-label">Total consolidado</span>
+      <span class="total-value">Q {{ totalSaldo | number:'1.2-2' }}</span>
+    </div>
+  }
+
+  <div class="actions">
+    <button class="btn secondary" routerLink="/menu">Volver al menú</button>
+  </div>
+</div>

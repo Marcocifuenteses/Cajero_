@@ -1,0 +1,221 @@
+.section-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 8px;
+}
+
+/* ── Búsqueda por teléfono ── */
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 0 18px;
+}
+
+/* ── Bloque de resultados ── */
+.result-block {
+  margin-top: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.result-titular {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 10px;
+}
+
+.result-titular strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.result-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.result-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.result-card-selected {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.result-card-tipo {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.85);
+  min-width: 80px;
+}
+
+.result-card-num {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  flex: 1;
+}
+
+.result-card-moneda {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+}
+
+.result-card-check {
+  font-size: 11px;
+  color: #818cf8;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+/* ── Resumen destino seleccionado ── */
+.dest-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.dest-summary-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #818cf8;
+  white-space: nowrap;
+}
+
+.dest-summary-info {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Confirmación ── */
+.confirm-box {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  margin-top: 16px;
+}
+
+.confirm-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 20px;
+}
+
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.confirm-row:last-of-type {
+  border-bottom: none;
+  margin-bottom: 20px;
+}
+
+.confirm-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.confirm-value {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+
+.confirm-monto {
+  font-size: 20px;
+  color: #f8fbff;
+}
+
+/* ── Comprobante ── */
+.comprobante {
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  background: rgba(74, 222, 128, 0.05);
+  margin-bottom: 16px;
+}
+
+.comprobante-header {
+  font-size: 15px;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.comprobante-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+}
+
+.comprobante-row span:first-child { color: rgba(255, 255, 255, 0.45); }
+.comprobante-row span:last-child {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.comprobante-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+@media print {
+  body > * { display: none; }
+  #comprobante { display: block !important; }
+}

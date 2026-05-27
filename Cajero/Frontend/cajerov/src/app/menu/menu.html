@@ -1,0 +1,40 @@
+<div class="view">
+  <div class="eyebrow">Menú principal</div>
+  <div class="title">Bienvenido, {{ firstName }}</div>
+
+  <div class="menu">
+    <a class="menu-item" routerLink="/saldo">
+      <div class="menu-icon">💳</div>
+      <div class="menu-label">Consultar<br>Saldo</div>
+      <span class="menu-arrow">↗</span>
+    </a>
+
+    <a class="menu-item" routerLink="/retiro">
+      <div class="menu-icon">💵</div>
+      <div class="menu-label">Retirar<br>Efectivo</div>
+      <span class="menu-arrow">↗</span>
+    </a>
+
+    <a class="menu-item" routerLink="/transferencia">
+      <div class="menu-icon">⇄</div>
+      <div class="menu-label">Transferir<br>Fondos</div>
+      <span class="menu-arrow">↗</span>
+    </a>
+
+    <a class="menu-item" routerLink="/historial">
+      <div class="menu-icon">📋</div>
+      <div class="menu-label">Movimientos</div>
+      <span class="menu-arrow">↗</span>
+    </a>
+
+    <a class="menu-item full" routerLink="/cambiar-pin">
+      <div class="menu-icon">🔑</div>
+      <div class="menu-label">Cambiar PIN</div>
+      <span class="menu-arrow">↗</span>
+    </a>
+  </div>
+
+  <div class="actions">
+    <button class="btn secondary" (click)="logout()">Cerrar sesión</button>
+  </div>
+</div>

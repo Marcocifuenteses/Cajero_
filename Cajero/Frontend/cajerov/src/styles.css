@@ -1,0 +1,811 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500;600&display=swap');
+
+:root {
+  --machine:    #18181b;
+  --machine-2:  #222226;
+  --bezel:      #0d0d10;
+  --screen:     #040e1c;
+  --green:      #22c55e;
+  --green-dim:  rgba(34, 197, 94, 0.12);
+  --green-glow: rgba(34, 197, 94, 0.25);
+  --text:       #e2f5e2;
+  --text-dim:   rgba(226, 245, 226, 0.5);
+  --text-mute:  rgba(226, 245, 226, 0.25);
+  --danger:     #ef4444;
+  --warning:    #f59e0b;
+  --blue:       #3b82f6;
+  --radius:     18px;
+  --radius-sm:  10px;
+  --radius-xs:  6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(34,197,94,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(59,130,246,0.04) 0%, transparent 50%),
+    linear-gradient(160deg, #0a0a0c 0%, #111115 100%);
+  font-family: 'Geist', -apple-system, system-ui, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════
+   CARCASA DEL CAJERO
+═══════════════════════════════════════════ */
+
+.atm {
+  width: min(96vw, 480px);
+  background: linear-gradient(175deg, #27272a 0%, #18181b 40%, #131316 100%);
+  border-radius: 24px;
+  border: 1px solid #3f3f46;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04) inset,
+    0 60px 120px rgba(0,0,0,0.7),
+    0 20px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Línea de brillo superior (efecto metal) */
+.atm::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+}
+
+/* ── Header ─────────────────────────────── */
+.header {
+  padding: 20px 24px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, #2c2c30 0%, #222226 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--green);
+  text-shadow: 0 0 20px var(--green-glow);
+}
+
+.logo-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--green); }
+  50%       { opacity: 0.6; box-shadow: 0 0 4px var(--green); }
+}
+
+.status-pill {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  background: var(--green-dim);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 100px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.06em;
+}
+
+.status-pill::before {
+  content: '';
+  width: 5px; height: 5px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--green);
+}
+
+/* ── Ranura de tarjeta ───────────────────── */
+.card-slot {
+  background: var(--bezel);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.card-slot-track {
+  flex: 1;
+  height: 3px;
+  background: linear-gradient(90deg, #0a0a0d, #222226, #0a0a0d);
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.card-slot-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  color: var(--text-mute);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Bisel + pantalla ────────────────────── */
+.screen-bezel {
+  background: var(--bezel);
+  padding: 14px;
+}
+
+.screen {
+  background: var(--screen);
+  border-radius: 8px;
+  min-height: 520px;
+  padding: 28px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(34,197,94,0.08);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.5) inset,
+    0 0 40px rgba(34,197,94,0.03) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Escanline sutil */
+.screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.04) 2px,
+    rgba(0,0,0,0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen > * { position: relative; z-index: 1; }
+
+/* ── Footer ─────────────────────────────── */
+.footer {
+  background: linear-gradient(180deg, #222226 0%, #1a1a1e 100%);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  color: var(--text-mute);
+  letter-spacing: 0.1em;
+}
+
+/* ══════════════════════════════════════════
+   CONTENIDO DE LA PANTALLA
+══════════════════════════════════════════ */
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: enter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  flex: 1;
+}
+
+@keyframes enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.eyebrow {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.subtitle {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* ── Menú principal ──────────────────────── */
+.menu {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 14px;
+  background: rgba(34,197,94,0.04);
+  border: 1px solid rgba(34,197,94,0.15);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  color: var(--text);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34,197,94,0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.menu-item:hover {
+  background: rgba(34,197,94,0.08);
+  border-color: rgba(34,197,94,0.35);
+  transform: translateY(-1px);
+}
+
+.menu-item:hover::before { opacity: 1; }
+
+.menu-item:active { transform: translateY(0) scale(0.98); }
+
+.menu-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.menu-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.menu-arrow {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  font-size: 12px;
+  color: var(--green);
+  opacity: 0.5;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.menu-item:hover .menu-arrow {
+  opacity: 1;
+  transform: translate(2px, -2px);
+}
+
+/* Botón que ocupa el ancho completo (span=2) */
+.menu-item.full {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ── Inputs ─────────────────────────────── */
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 14px;
+  border: 1px solid rgba(34,197,94,0.18);
+  border-radius: var(--radius-xs);
+  background: rgba(34,197,94,0.04);
+  font-family: 'Geist Mono', monospace;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input:focus {
+  border-color: rgba(34,197,94,0.5);
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.08);
+}
+
+.input::placeholder {
+  color: var(--text-mute);
+  font-family: 'Geist', sans-serif;
+}
+
+select.input {
+  background-color: #040e1c;
+  color: var(--text);
+  cursor: pointer;
+}
+
+select.input option {
+  background-color: #040e1c;
+  color: var(--text);
+}
+
+select.input option:disabled {
+  color: var(--text-mute);
+}
+
+/* ── Botones de acción ───────────────────── */
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.btn {
+  flex: 1;
+  min-height: 48px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--radius-xs);
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s, box-shadow 0.12s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn.secondary {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+}
+
+.btn.secondary:hover {
+  background: rgba(255,255,255,0.09);
+  color: var(--text);
+}
+
+.btn.primary {
+  background: var(--green);
+  color: #030d07;
+  box-shadow: 0 4px 20px rgba(34,197,94,0.3);
+}
+
+.btn.primary:hover {
+  background: #4ade80;
+  box-shadow: 0 6px 28px rgba(34,197,94,0.4);
+  transform: translateY(-1px);
+}
+
+.btn.primary:active { transform: translateY(0); }
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  transform: none !important;
+}
+
+/* ── Teclado numérico ────────────────────── */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.key {
+  aspect-ratio: 1.6 / 1;
+  background: rgba(34,197,94,0.05);
+  border: 1px solid rgba(34,197,94,0.15);
+  border-radius: var(--radius-xs);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 22px;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, transform 0.08s;
+}
+
+.key:hover  { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.3); }
+.key:active { transform: scale(0.95); background: rgba(34,197,94,0.18); }
+
+.key.action {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.key.confirm {
+  background: var(--green);
+  border-color: var(--green);
+  color: #030d07;
+  font-size: 14px;
+  box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+}
+
+.key.confirm:hover { background: #4ade80; }
+
+/* ── PIN display ─────────────────────────── */
+.pin-display {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.pin-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(34,197,94,0.35);
+  background: transparent;
+  transition: all 0.2s;
+}
+
+.pin-dot.filled {
+  background: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 10px var(--green-glow);
+}
+
+/* ── Montos rápidos ──────────────────────── */
+.amounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.amount-btn {
+  padding: 18px 14px;
+  background: rgba(34,197,94,0.04);
+  border: 1px solid rgba(34,197,94,0.15);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
+}
+
+.amount-btn:hover {
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.35);
+  transform: translateY(-1px);
+}
+
+.amount-value {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 20px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.amount-currency {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+/* ── Mensajes ────────────────────────────── */
+.error {
+  padding: 12px 14px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: var(--radius-xs);
+  color: #fca5a5;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.success {
+  padding: 12px 14px;
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: var(--radius-xs);
+  color: var(--green);
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ── Tarjetas de cuenta ──────────────────── */
+.account-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.account-card {
+  background: rgba(34,197,94,0.04);
+  border: 1px solid rgba(34,197,94,0.15);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.account-card:hover {
+  background: rgba(34,197,94,0.08);
+  border-color: rgba(34,197,94,0.3);
+}
+
+.account-number {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+}
+
+.account-balance {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 28px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.account-type {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--green);
+}
+
+.account-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 14px;
+}
+
+/* ── Balance card ────────────────────────── */
+.balance-card {
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+}
+
+.balance-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 10px;
+}
+
+.balance-amount {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 36px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.balance-amount .currency {
+  font-size: 16px;
+  color: var(--green);
+  margin-right: 4px;
+}
+
+.balance-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(34,197,94,0.12);
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: 0.05em;
+}
+
+/* ── Misc ────────────────────────────────── */
+.big-title {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.big-title .light {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.welcome-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.center-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.spinner {
+  width: 30px; height: 30px;
+  border: 2px solid rgba(34,197,94,0.2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.status-text {
+  font-family: 'Geist Mono', monospace;
+  font-size: 14px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+
+.status-sub {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: 0.08em;
+}
+
+.receipt {
+  background: rgba(34,197,94,0.04);
+  border: 1px solid rgba(34,197,94,0.15);
+  border-radius: var(--radius-xs);
+  padding: 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  color: var(--text-dim);
+  border-bottom: 1px dashed rgba(34,197,94,0.1);
+}
+
+.receipt-row:last-child { border-bottom: none; }
+
+.receipt-row.total {
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.card-art {
+  width: 52px; height: 34px;
+  background: linear-gradient(135deg, #1a2a4a, #0d1a30);
+  border-radius: 5px;
+  border: 1px solid rgba(34,197,94,0.2);
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.card-art::after {
+  content: '';
+  position: absolute;
+  top: 8px; left: 7px;
+  width: 10px; height: 8px;
+  background: rgba(34,197,94,0.4);
+  border-radius: 2px;
+}
+
+/* ── TX list ─────────────────────────────── */
+.tx-list { display: flex; flex-direction: column; gap: 2px; }
+
+.tx-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(34,197,94,0.03);
+  border: 1px solid rgba(34,197,94,0.08);
+  border-radius: var(--radius-xs);
+}
+
+.tx-info { display: flex; flex-direction: column; gap: 2px; }
+
+.tx-type {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tx-date {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-mute);
+}
+
+.tx-amount {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  font-feature-settings: "tnum";
+}
+
+.tx-amount.neg { color: #fca5a5; }
+.tx-amount.pos { color: var(--green); }
+
+.form-grid { display: grid; gap: 14px; }
+
+/* ── Barra de carga ──────────────────────── */
+.loading-bar {
+  position: absolute;
+  top: 0; left: 0;
+  height: 2px;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, var(--green), #86efac);
+  box-shadow: 0 0 12px var(--green);
+  border-radius: 0 2px 2px 0;
+  animation: loading-slide 1.2s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes loading-slide {
+  0%   { left: -40%; opacity: 1; }
+  60%  { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
+}
+
+@media print {
+  body > * { display: none; }
+  #comprobante { display: block !important; }
+}

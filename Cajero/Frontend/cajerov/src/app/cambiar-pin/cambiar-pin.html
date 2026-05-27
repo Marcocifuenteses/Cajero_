@@ -1,0 +1,59 @@
+<div class="view">
+  @if (cargando()) { <div class="loading-bar"></div> }
+  <div class="eyebrow">Seguridad</div>
+  <div class="title">Cambiar PIN</div>
+  <div class="subtitle">Tu PIN debe tener al menos 4 dígitos.</div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+  @if (mensaje()) {
+    <p class="success">{{ mensaje() }}</p>
+  }
+
+  <label class="label">
+    PIN actual
+    <input
+      class="input"
+      type="password"
+      inputmode="numeric"
+      [(ngModel)]="pinActual"
+      name="pinActual"
+      placeholder="••••"
+      maxlength="8"
+    />
+  </label>
+
+  <label class="label">
+    PIN nuevo
+    <input
+      class="input"
+      type="password"
+      inputmode="numeric"
+      [(ngModel)]="pinNuevo"
+      name="pinNuevo"
+      placeholder="••••"
+      maxlength="8"
+    />
+  </label>
+
+  <label class="label">
+    Confirmar PIN nuevo
+    <input
+      class="input"
+      type="password"
+      inputmode="numeric"
+      [(ngModel)]="pinConfirm"
+      name="pinConfirm"
+      placeholder="••••"
+      maxlength="8"
+    />
+  </label>
+
+  <div class="actions">
+    <button class="btn secondary" routerLink="/menu" [disabled]="cargando()">Volver</button>
+    <button class="btn primary" type="button" (click)="cambiar()" [disabled]="cargando()">
+      {{ cargando() ? 'Guardando...' : 'Cambiar PIN' }}
+    </button>
+  </div>
+</div>

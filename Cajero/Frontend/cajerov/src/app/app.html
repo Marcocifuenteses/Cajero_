@@ -1,0 +1,35 @@
+<div class="atm">
+
+  <!-- Cabecera de la máquina -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      Fintech
+    </div>
+    <div class="status-pill">En línea</div>
+  </div>
+
+  <!-- Ranura de tarjeta -->
+  <div class="card-slot">
+    <div class="card-slot-track"></div>
+    <div class="card-slot-label">Inserte su tarjeta</div>
+    <div class="card-slot-track"></div>
+  </div>
+
+  <!-- Bisel + Pantalla -->
+  <div class="screen-bezel">
+    <div class="screen">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <!-- Pie de la máquina -->
+  <div class="footer">
+    <span>ATM-0421 · GT-01</span>
+    <span>FINTECH BANK</span>
+    <span>
+      @if (firstName) { {{ firstName }} } @else { 24H }
+    </span>
+  </div>
+
+</div>

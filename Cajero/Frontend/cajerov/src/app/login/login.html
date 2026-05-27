@@ -1,0 +1,80 @@
+<div class="view">
+  @if (loading()) { <div class="loading-bar"></div> }
+
+  @if (step === 'welcome') {
+    <div class="welcome-hero">
+      <div class="card-art"></div>
+      <div class="big-title">
+      <div class="big-title">
+  Bienvenido a Fintech.
+</div>
+      </div>
+      <div class="subtitle">Tu cajero digital en un solo lugar.</div>
+      <div class="actions">
+        <button class="btn primary" type="button" (click)="start()">Comenzar</button>
+      </div>
+    </div>
+  }
+
+  @if (step === 'card') {
+    <form class="form-grid" (ngSubmit)="validateTarjeta()">
+      <div class="eyebrow">Tarjeta</div>
+      <div class="title">Ingresa tu número de tarjeta</div>
+
+      <label class="label">
+        Número de tarjeta
+        <input
+          class="input"
+          name="numeroTarjeta"
+          [(ngModel)]="numeroTarjeta"
+          required
+          placeholder="0000 0000 0000 0000"
+        />
+      </label>
+
+      <div class="actions">
+        <button class="btn primary" type="submit" [disabled]="loading()">Continuar</button>
+      </div>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+    </form>
+  }
+
+  @if (step === 'pin') {
+    <form class="form-grid" (ngSubmit)="submit()">
+      <div class="eyebrow">PIN</div>
+      <div class="title">Bienvenido, {{ firstName }}</div>
+      <div class="subtitle">Ingresa tu PIN para acceder.</div>
+
+      <label class="label">
+        Número de tarjeta
+        <input class="input" [value]="numeroTarjeta" disabled />
+      </label>
+
+      <label class="label">
+        PIN
+        <input
+          class="input"
+          name="pin"
+          type="password"
+          [(ngModel)]="pin"
+          required
+          minlength="4"
+          placeholder="1234"
+        />
+      </label>
+
+      <div class="actions">
+        <button class="btn" type="button" (click)="step = 'card'">Retroceder</button>
+        <button class="btn primary" type="submit" [disabled]="loading()">Ingresar</button>
+      </div>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+    </form>
+  }
+
+</div>

@@ -1,0 +1,170 @@
+<div class="view">
+  @if (cargando() || buscando()) { <div class="loading-bar"></div> }
+  <div class="eyebrow">Transferencia</div>
+  <div class="title">Enviar dinero, {{ firstName }}</div>
+  <div class="subtitle">Transfiere a otra cuenta con facilidad.</div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (comprobante()) {
+    <div class="comprobante" id="comprobante">
+      <div class="comprobante-header">Comprobante de Transferencia</div>
+      <div class="comprobante-row">
+        <span>Desde</span>
+        <span>{{ comprobante().desde?.tipo_cuenta || 'Cuenta' }}{{ comprobante().desde?.numero_cuenta ? ' · ' + comprobante().desde.numero_cuenta : '' }}</span>
+      </div>
+      <div class="comprobante-row">
+        <span>Para</span>
+        <span>{{ comprobante().para }}</span>
+      </div>
+      <div class="comprobante-row">
+        <span>Cuenta destino</span>
+        <span>{{ comprobante().cuentaDestino?.numero_cuenta || ('#' + comprobante().cuentaDestino?.id) }}</span>
+      </div>
+      <div class="comprobante-row">
+        <span>Monto</span>
+        <span>Q {{ comprobante().monto | number:'1.2-2' }}</span>
+      </div>
+      <div class="comprobante-row">
+        <span>Fecha</span>
+        <span>{{ comprobante().fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+      <div class="comprobante-actions">
+        <button class="btn secondary" type="button" (click)="comprobante.set(null)">Cerrar</button>
+        <button class="btn primary" type="button" onclick="window.print()">Imprimir</button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Cuenta origen ─────────────────────────────────────── -->
+  <div class="section-label">Desde tu cuenta</div>
+
+  <select class="input" [(ngModel)]="cuentaOrigen" name="cuentaOrigen">
+    <option value="">Selecciona una cuenta</option>
+    @for (cuenta of cuentas(); track cuenta.id) {
+      <option [value]="cuenta.id" [disabled]="!cuenta.activa">
+        {{ cuenta.tipo_cuenta || 'Cuenta' }}
+        @if (cuenta.numero_cuenta) { · {{ cuenta.numero_cuenta }} }
+        — Q {{ cuenta.saldo | number:'1.2-2' }}
+        @if (!cuenta.activa) { (Inactiva) }
+      </option>
+    }
+  </select>
+
+  <!-- ── Buscar destinatario ───────────────────────────────── -->
+  <div class="section-label" style="margin-top:20px;">Destinatario</div>
+
+  <div class="search-row">
+    <input
+      class="input search-input"
+      type="tel"
+      [(ngModel)]="telefonoDestino"
+      name="telefonoDestino"
+      placeholder="Número de teléfono del destinatario"
+      (keydown.enter)="buscarDestinatario()"
+    />
+    <button
+      class="btn secondary search-btn"
+      type="button"
+      (click)="buscarDestinatario()"
+      [disabled]="buscando() || !telefonoDestino">
+      {{ buscando() ? '...' : 'Buscar' }}
+    </button>
+  </div>
+
+  <!-- Resultados de búsqueda -->
+  @if (resultadoBusqueda()) {
+    <div class="result-block">
+      <div class="result-titular">
+        Cuentas de <strong>{{ resultadoBusqueda()!.titular }}</strong>
+      </div>
+      <div class="result-accounts">
+        @for (cuenta of resultadoBusqueda()!.cuentas; track cuenta.id) {
+          <div
+            class="result-card"
+            [class.result-card-selected]="cuentaDestinoObj()?.id === cuenta.id"
+            (click)="seleccionarCuentaDestino(cuenta)">
+            <div class="result-card-tipo">{{ cuenta.tipo_cuenta }}</div>
+            <div class="result-card-num">
+              {{ cuenta.numero_cuenta || ('Cuenta #' + cuenta.id) }}
+            </div>
+            <div class="result-card-moneda">{{ cuenta.moneda }}</div>
+            @if (cuentaDestinoObj()?.id === cuenta.id) {
+              <div class="result-card-check">✓ Seleccionada</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Resumen de cuenta destino seleccionada -->
+  @if (cuentaDestinoObj()) {
+    <div class="dest-summary">
+      <span class="dest-summary-label">Enviando a</span>
+      <span class="dest-summary-info">
+        {{ resultadoBusqueda()?.titular }}
+        · {{ cuentaDestinoObj()!.tipo_cuenta }}
+        · {{ cuentaDestinoObj()!.numero_cuenta || ('#' + cuentaDestinoObj()!.id) }}
+      </span>
+    </div>
+  }
+
+  <!-- ── Monto ─────────────────────────────────────────────── -->
+  <div class="section-label" style="margin-top:20px;">Monto</div>
+  <input
+    class="input"
+    type="number"
+    name="monto"
+    [(ngModel)]="monto"
+    placeholder="Q 0.00"
+    min="0.01"
+    step="0.01"
+  />
+
+  <!-- ── Acciones ──────────────────────────────────────────── -->
+  @if (!confirmando()) {
+    <div class="actions">
+      <button class="btn secondary" routerLink="/menu">Volver</button>
+      <button
+        class="btn primary"
+        type="button"
+        (click)="solicitarConfirmacion()"
+        [disabled]="!cuentaOrigen || !cuentaDestino || !monto || monto <= 0">
+        Transferir
+      </button>
+    </div>
+  }
+
+  @if (confirmando()) {
+    <div class="confirm-box">
+      <div class="confirm-title">¿Confirmas esta transferencia?</div>
+      <div class="confirm-row">
+        <span class="confirm-label">Desde</span>
+        <span class="confirm-value">
+          {{ cuentaOrigenObj?.tipo_cuenta || 'Cuenta' }}
+          @if (cuentaOrigenObj?.numero_cuenta) { · {{ cuentaOrigenObj.numero_cuenta }} }
+        </span>
+      </div>
+      <div class="confirm-row">
+        <span class="confirm-label">Para</span>
+        <span class="confirm-value">
+          {{ resultadoBusqueda()?.titular }}
+          · {{ cuentaDestinoObj()?.tipo_cuenta }}
+        </span>
+      </div>
+      <div class="confirm-row">
+        <span class="confirm-label">Monto</span>
+        <span class="confirm-value confirm-monto">Q {{ monto | number:'1.2-2' }}</span>
+      </div>
+      <div class="actions">
+        <button class="btn secondary" type="button" (click)="cancelarConfirmacion()" [disabled]="cargando()">Cancelar</button>
+        <button class="btn primary" type="button" (click)="enviarTransferencia()" [disabled]="cargando()">
+          {{ cargando() ? 'Procesando...' : 'Confirmar' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>
