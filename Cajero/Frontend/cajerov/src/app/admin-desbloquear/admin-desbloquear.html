@@ -1,0 +1,47 @@
+<div class="admin-wrapper">
+  <div class="admin-card">
+    <div class="admin-header">
+      <div class="admin-icon">🔓</div>
+      <h1 class="admin-title">Panel de Administración</h1>
+      <p class="admin-subtitle">Desbloqueo de tarjetas</p>
+    </div>
+
+    <form class="admin-form" (ngSubmit)="desbloquear()">
+      <label class="field">
+        <span class="field-label">Número de tarjeta</span>
+        <input
+          class="field-input"
+          name="numeroTarjeta"
+          [(ngModel)]="numeroTarjeta"
+          placeholder="0000 0000 0000 0000"
+          required
+          autocomplete="off"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Código de administrador</span>
+        <input
+          class="field-input"
+          name="adminSecret"
+          type="password"
+          [(ngModel)]="adminSecret"
+          placeholder="••••••••"
+          required
+          autocomplete="off"
+        />
+      </label>
+
+      @if (error()) {
+        <div class="msg error">{{ error() }}</div>
+      }
+      @if (success()) {
+        <div class="msg success">{{ success() }}</div>
+      }
+
+      <button class="btn-submit" type="submit" [disabled]="loading()">
+        @if (loading()) { Procesando... } @else { Desbloquear tarjeta }
+      </button>
+    </form>
+  </div>
+</div>

@@ -3,9 +3,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const atmRoutes = require('./routes/atm.routes');
+const atmController = require('./controllers/atm.controller');
 
 const app = express();
 
@@ -20,7 +21,7 @@ const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:4200';
 app.use(cors({
   origin: allowedOrigin,
   methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'sesion-id']
+  allowedHeaders: ['Content-Type', 'sesion-id', 'x-admin-secret']
 }));
 
 app.use(express.json());
@@ -35,6 +36,7 @@ const loginLimiter = rateLimit({
 });
 
 app.use('/atm/login', loginLimiter);
+app.post('/atm/admin/desbloquear-tarjeta', atmController.desbloquearTarjeta);
 app.use('/atm', atmRoutes);
 
 app.get('/', (req, res) => {

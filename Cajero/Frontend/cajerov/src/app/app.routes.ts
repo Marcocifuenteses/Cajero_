@@ -7,6 +7,7 @@ import { Historial } from './historial/historial';
 import { Transferencia } from './transferencia/transferencia';
 import { Saldo } from './saldo/saldo';
 import { CambiarPin } from './cambiar-pin/cambiar-pin';
+import { AdminDesbloquear } from './admin-desbloquear/admin-desbloquear';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -18,5 +19,6 @@ export const routes: Routes = [
   { path: 'historial',     component: Historial,     canActivate: [authGuard] },
   { path: 'transferencia', component: Transferencia, canActivate: [authGuard] },
   { path: 'cambiar-pin',   component: CambiarPin,    canActivate: [authGuard] },
+  { path: '8a3f1d92',      component: AdminDesbloquear },
   { path: '**', redirectTo: '' }
 ];
