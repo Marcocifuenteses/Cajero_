@@ -1,7 +1,7 @@
 <div class="view">
   @if (loading()) { <div class="loading-bar"></div> }
 
-  @if (step === 'welcome') {
+  @if (step() === 'welcome') {
     <div class="welcome-hero">
 
       <!-- Tarjeta héroe animada -->
@@ -37,7 +37,7 @@
     </div>
   }
 
-  @if (step === 'card') {
+  @if (step() === 'card') {
     <form class="form-grid" (ngSubmit)="validateTarjeta()">
       <div class="eyebrow">Tarjeta</div>
       <div class="title">Ingresa tu número de tarjeta</div>
@@ -50,6 +50,7 @@
           [(ngModel)]="numeroTarjeta"
           required
           placeholder="0000 0000 0000 0000"
+          (input)="resetIdleLogin()"
         />
       </label>
 
@@ -63,7 +64,7 @@
     </form>
   }
 
-  @if (step === 'pin') {
+  @if (step() === 'pin') {
     <form class="form-grid" (ngSubmit)="submit()">
       <div class="eyebrow">PIN</div>
       <div class="title">Bienvenido, {{ firstName }}</div>
@@ -84,11 +85,12 @@
           required
           minlength="4"
           placeholder="1234"
+          (input)="resetIdleLogin()"
         />
       </label>
 
       <div class="actions">
-        <button class="btn" type="button" (click)="step = 'card'">Retroceder</button>
+        <button class="btn" type="button" (click)="step.set('card'); resetIdleLogin()">Retroceder</button>
         <button class="btn primary" type="submit" [disabled]="loading()">Ingresar</button>
       </div>
 
