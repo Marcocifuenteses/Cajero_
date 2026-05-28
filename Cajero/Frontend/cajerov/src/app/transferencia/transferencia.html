@@ -1,109 +1,219 @@
 <div class="view">
   @if (cargando() || buscando()) { <div class="loading-bar"></div> }
+
+  <!-- ── Modal: Selección de cuenta destino ─────────── -->
+  @if (mostrandoResultados()) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-title">Cuentas de {{ resultadoBusqueda()!.titular }}</div>
+        <div class="result-accounts">
+          @for (cuenta of resultadoBusqueda()!.cuentas; track cuenta.id) {
+            <div class="result-card" (click)="seleccionarCuentaDestino(cuenta)">
+              <div class="result-card-tipo">{{ cuenta.tipo_cuenta }}</div>
+              <div class="result-card-num">{{ cuenta.numero_cuenta || ('Cuenta #' + cuenta.id) }}</div>
+              <div class="result-card-moneda">{{ cuenta.moneda }}</div>
+            </div>
+          }
+        </div>
+        <div class="modal-actions">
+          <button class="btn secondary" type="button" (click)="mostrandoResultados.set(false)">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Modal: Confirmación ────────────────────────── -->
+  @if (confirmando()) {
+    <div class="modal-overlay">
+      <div class="modal-card modal-confirm">
+        <div class="modal-title">¿Confirmas esta transferencia?</div>
+        <div class="modal-row">
+          <span class="modal-label">Desde</span>
+          <span class="modal-value">
+            {{ cuentaOrigenObj?.tipo_cuenta || 'Cuenta' }}
+            @if (cuentaOrigenObj?.numero_cuenta) { · {{ cuentaOrigenObj.numero_cuenta }} }
+          </span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Para</span>
+          <span class="modal-value">{{ resultadoBusqueda()?.titular }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Cuenta destino</span>
+          <span class="modal-value">
+            {{ cuentaDestinoObj()?.tipo_cuenta }}
+            · {{ cuentaDestinoObj()?.numero_cuenta || ('#' + cuentaDestinoObj()?.id) }}
+          </span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Monto</span>
+          <span class="modal-amount">Q {{ monto | number:'1.2-2' }}</span>
+        </div>
+        <div class="modal-actions">
+          <button class="btn secondary" type="button" (click)="cancelarConfirmacion()" [disabled]="cargando()">Cancelar</button>
+          <button class="btn primary" type="button" (click)="enviarTransferencia()" [disabled]="cargando()">
+            {{ cargando() ? 'Procesando...' : 'Confirmar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Modal: Comprobante ─────────────────────────── -->
+  @if (comprobante()) {
+    <div class="modal-overlay">
+      <div class="modal-card modal-success">
+        <div class="modal-title green">Transferencia exitosa</div>
+        <div class="modal-row">
+          <span class="modal-label">Titular</span>
+          <span class="modal-value">{{ comprobante().titular_origen }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Desde</span>
+          <span class="modal-value">
+            {{ comprobante().desde?.tipo_cuenta || 'Cuenta' }}
+            @if (comprobante().desde?.numero_cuenta) { · {{ comprobante().desde.numero_cuenta }} }
+          </span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Para</span>
+          <span class="modal-value">{{ comprobante().para }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Cuenta destino</span>
+          <span class="modal-value">
+            {{ comprobante().cuentaDestino?.tipo_cuenta }}
+            · {{ comprobante().cuentaDestino?.numero_cuenta || ('#' + comprobante().cuentaDestino?.id) }}
+          </span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Monto</span>
+          <span class="modal-amount">Q {{ comprobante().monto | number:'1.2-2' }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Fecha</span>
+          <span class="modal-value">{{ comprobante().fecha | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Hora</span>
+          <span class="modal-value">{{ comprobante().fecha | date:'HH:mm:ss' }}</span>
+        </div>
+        @if (comprobante().auth_num) {
+          <div class="modal-row">
+            <span class="modal-label">No. autorización</span>
+            <span class="modal-value modal-auth">#{{ comprobante().auth_num | number:'6.0-0' }}</span>
+          </div>
+        }
+        <div class="modal-actions">
+          <button class="btn secondary" type="button" (click)="comprobante.set(null)">Cerrar</button>
+          <button class="btn primary" type="button" (click)="imprimir()">Imprimir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección exclusiva para impresión -->
+    <div class="print-receipt">
+      <div class="pr-header">
+        <div class="pr-logo">FINTECH ATM</div>
+        <div class="pr-tipo">COMPROBANTE DE TRANSFERENCIA</div>
+      </div>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      <table class="pr-table">
+        <tr>
+          <td class="pr-lbl">Titular</td>
+          <td class="pr-val">{{ comprobante().titular_origen }}</td>
+        </tr>
+        <tr>
+          <td class="pr-lbl">Cuenta origen</td>
+          <td class="pr-val">{{ comprobante().desde?.numero_cuenta || comprobante().desde?.tipo_cuenta }}</td>
+        </tr>
+        <tr>
+          <td class="pr-lbl">Tipo de cuenta</td>
+          <td class="pr-val">{{ comprobante().desde?.tipo_cuenta }}</td>
+        </tr>
+      </table>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      <table class="pr-table">
+        <tr>
+          <td class="pr-lbl">Destinatario</td>
+          <td class="pr-val">{{ comprobante().para }}</td>
+        </tr>
+        <tr>
+          <td class="pr-lbl">Cuenta destino</td>
+          <td class="pr-val">{{ comprobante().cuentaDestino?.numero_cuenta || comprobante().cuentaDestino?.tipo_cuenta }}</td>
+        </tr>
+      </table>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      <table class="pr-table">
+        <tr>
+          <td class="pr-lbl">Fecha</td>
+          <td class="pr-val">{{ comprobante().fecha | date:'dd/MM/yyyy' }}</td>
+        </tr>
+        <tr>
+          <td class="pr-lbl">Hora</td>
+          <td class="pr-val">{{ comprobante().fecha | date:'HH:mm:ss' }}</td>
+        </tr>
+      </table>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      <div class="pr-monto-label">MONTO TRANSFERIDO</div>
+      <div class="pr-monto">Q {{ comprobante().monto | number:'1.2-2' }}</div>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      @if (comprobante().auth_num) {
+        <div class="pr-auth-label">No. de Autorización</div>
+        <div class="pr-auth">#{{ comprobante().auth_num | number:'6.0-0' }}</div>
+      }
+      <div class="pr-footer">CONSERVE ESTE COMPROBANTE</div>
+    </div>
+  }
+
+  <!-- ── Formulario principal ────────────────────────── -->
   <div class="eyebrow">Transferencia</div>
   <div class="title">Enviar dinero, {{ firstName }}</div>
-  <div class="subtitle">Transfiere a otra cuenta con facilidad.</div>
 
   @if (error()) {
     <p class="error">{{ error() }}</p>
   }
 
-  @if (comprobante()) {
-    <div class="comprobante" id="comprobante">
-      <div class="comprobante-header">Comprobante de Transferencia</div>
-      <div class="comprobante-row">
-        <span>Desde</span>
-        <span>{{ comprobante().desde?.tipo_cuenta || 'Cuenta' }}{{ comprobante().desde?.numero_cuenta ? ' · ' + comprobante().desde.numero_cuenta : '' }}</span>
-      </div>
-      <div class="comprobante-row">
-        <span>Para</span>
-        <span>{{ comprobante().para }}</span>
-      </div>
-      <div class="comprobante-row">
-        <span>Cuenta destino</span>
-        <span>{{ comprobante().cuentaDestino?.numero_cuenta || ('#' + comprobante().cuentaDestino?.id) }}</span>
-      </div>
-      <div class="comprobante-row">
-        <span>Monto</span>
-        <span>Q {{ comprobante().monto | number:'1.2-2' }}</span>
-      </div>
-      <div class="comprobante-row">
-        <span>Fecha</span>
-        <span>{{ comprobante().fecha | date:'dd/MM/yyyy HH:mm' }}</span>
-      </div>
-      <div class="comprobante-actions">
-        <button class="btn secondary" type="button" (click)="comprobante.set(null)">Cerrar</button>
-        <button class="btn primary" type="button" onclick="window.print()">Imprimir</button>
-      </div>
+  <label class="label">
+    Desde tu cuenta
+    <select class="input" [(ngModel)]="cuentaOrigen" name="cuentaOrigen">
+      <option value="">Selecciona una cuenta</option>
+      @for (cuenta of cuentas(); track cuenta.id) {
+        <option [value]="cuenta.id" [disabled]="!cuenta.activa">
+          {{ cuenta.tipo_cuenta || 'Cuenta' }}
+          @if (cuenta.numero_cuenta) { · {{ cuenta.numero_cuenta }} }
+          — Q {{ cuenta.saldo | number:'1.2-2' }}
+          @if (!cuenta.activa) { (Inactiva) }
+        </option>
+      }
+    </select>
+  </label>
+
+  <label class="label">
+    Destinatario
+    <div class="search-row">
+      <input
+        class="input search-input"
+        type="tel"
+        [(ngModel)]="telefonoDestino"
+        name="telefonoDestino"
+        placeholder="Teléfono del destinatario"
+        (keydown.enter)="buscarDestinatario()"
+      />
+      <button
+        class="btn secondary search-btn"
+        type="button"
+        (click)="buscarDestinatario()"
+        [disabled]="buscando() || !telefonoDestino">
+        {{ buscando() ? '...' : 'Buscar' }}
+      </button>
     </div>
-  }
+  </label>
 
-  <!-- ── Cuenta origen ─────────────────────────────────────── -->
-  <div class="section-label">Desde tu cuenta</div>
-
-  <select class="input" [(ngModel)]="cuentaOrigen" name="cuentaOrigen">
-    <option value="">Selecciona una cuenta</option>
-    @for (cuenta of cuentas(); track cuenta.id) {
-      <option [value]="cuenta.id" [disabled]="!cuenta.activa">
-        {{ cuenta.tipo_cuenta || 'Cuenta' }}
-        @if (cuenta.numero_cuenta) { · {{ cuenta.numero_cuenta }} }
-        — Q {{ cuenta.saldo | number:'1.2-2' }}
-        @if (!cuenta.activa) { (Inactiva) }
-      </option>
-    }
-  </select>
-
-  <!-- ── Buscar destinatario ───────────────────────────────── -->
-  <div class="section-label" style="margin-top:20px;">Destinatario</div>
-
-  <div class="search-row">
-    <input
-      class="input search-input"
-      type="tel"
-      [(ngModel)]="telefonoDestino"
-      name="telefonoDestino"
-      placeholder="Número de teléfono del destinatario"
-      (keydown.enter)="buscarDestinatario()"
-    />
-    <button
-      class="btn secondary search-btn"
-      type="button"
-      (click)="buscarDestinatario()"
-      [disabled]="buscando() || !telefonoDestino">
-      {{ buscando() ? '...' : 'Buscar' }}
-    </button>
-  </div>
-
-  <!-- Resultados de búsqueda -->
-  @if (resultadoBusqueda()) {
-    <div class="result-block">
-      <div class="result-titular">
-        Cuentas de <strong>{{ resultadoBusqueda()!.titular }}</strong>
-      </div>
-      <div class="result-accounts">
-        @for (cuenta of resultadoBusqueda()!.cuentas; track cuenta.id) {
-          <div
-            class="result-card"
-            [class.result-card-selected]="cuentaDestinoObj()?.id === cuenta.id"
-            (click)="seleccionarCuentaDestino(cuenta)">
-            <div class="result-card-tipo">{{ cuenta.tipo_cuenta }}</div>
-            <div class="result-card-num">
-              {{ cuenta.numero_cuenta || ('Cuenta #' + cuenta.id) }}
-            </div>
-            <div class="result-card-moneda">{{ cuenta.moneda }}</div>
-            @if (cuentaDestinoObj()?.id === cuenta.id) {
-              <div class="result-card-check">✓ Seleccionada</div>
-            }
-          </div>
-        }
-      </div>
-    </div>
-  }
-
-  <!-- Resumen de cuenta destino seleccionada -->
+  <!-- Destino seleccionado -->
   @if (cuentaDestinoObj()) {
     <div class="dest-summary">
-      <span class="dest-summary-label">Enviando a</span>
+      <span class="dest-summary-dot"></span>
       <span class="dest-summary-info">
         {{ resultadoBusqueda()?.titular }}
         · {{ cuentaDestinoObj()!.tipo_cuenta }}
@@ -112,59 +222,27 @@
     </div>
   }
 
-  <!-- ── Monto ─────────────────────────────────────────────── -->
-  <div class="section-label" style="margin-top:20px;">Monto</div>
-  <input
-    class="input"
-    type="number"
-    name="monto"
-    [(ngModel)]="monto"
-    placeholder="Q 0.00"
-    min="0.01"
-    step="0.01"
-  />
+  <label class="label">
+    Monto
+    <input
+      class="input"
+      type="number"
+      name="monto"
+      [(ngModel)]="monto"
+      placeholder="Q 0.00"
+      min="0.01"
+      step="0.01"
+    />
+  </label>
 
-  <!-- ── Acciones ──────────────────────────────────────────── -->
-  @if (!confirmando()) {
-    <div class="actions">
-      <button class="btn secondary" routerLink="/menu">Volver</button>
-      <button
-        class="btn primary"
-        type="button"
-        (click)="solicitarConfirmacion()"
-        [disabled]="!cuentaOrigen || !cuentaDestino || !monto || monto <= 0">
-        Transferir
-      </button>
-    </div>
-  }
-
-  @if (confirmando()) {
-    <div class="confirm-box">
-      <div class="confirm-title">¿Confirmas esta transferencia?</div>
-      <div class="confirm-row">
-        <span class="confirm-label">Desde</span>
-        <span class="confirm-value">
-          {{ cuentaOrigenObj?.tipo_cuenta || 'Cuenta' }}
-          @if (cuentaOrigenObj?.numero_cuenta) { · {{ cuentaOrigenObj.numero_cuenta }} }
-        </span>
-      </div>
-      <div class="confirm-row">
-        <span class="confirm-label">Para</span>
-        <span class="confirm-value">
-          {{ resultadoBusqueda()?.titular }}
-          · {{ cuentaDestinoObj()?.tipo_cuenta }}
-        </span>
-      </div>
-      <div class="confirm-row">
-        <span class="confirm-label">Monto</span>
-        <span class="confirm-value confirm-monto">Q {{ monto | number:'1.2-2' }}</span>
-      </div>
-      <div class="actions">
-        <button class="btn secondary" type="button" (click)="cancelarConfirmacion()" [disabled]="cargando()">Cancelar</button>
-        <button class="btn primary" type="button" (click)="enviarTransferencia()" [disabled]="cargando()">
-          {{ cargando() ? 'Procesando...' : 'Confirmar' }}
-        </button>
-      </div>
-    </div>
-  }
+  <div class="actions">
+    <button class="btn secondary" routerLink="/menu">Volver</button>
+    <button
+      class="btn primary"
+      type="button"
+      (click)="solicitarConfirmacion()"
+      [disabled]="!cuentaOrigen || !cuentaDestino || !monto || monto <= 0">
+      Transferir
+    </button>
+  </div>
 </div>

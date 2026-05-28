@@ -3,6 +3,7 @@
   font-size: 14px;
 }
 
+/* ── Lista de cuentas ── */
 .account-list {
   display: flex;
   flex-direction: column;
@@ -18,10 +19,49 @@
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  animation: card-reveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition:
+    background   0.2s ease,
+    border-color 0.2s ease,
+    transform    0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow   0.2s ease;
 }
+
+.account-card:nth-child(1) { animation-delay: 0.06s; }
+.account-card:nth-child(2) { animation-delay: 0.14s; }
+.account-card:nth-child(3) { animation-delay: 0.22s; }
+.account-card:nth-child(4) { animation-delay: 0.30s; }
+
+@keyframes card-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Línea superior al hover */
+.account-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34,197,94,0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.account-card:hover {
+  background: rgba(34, 197, 94, 0.07);
+  border-color: rgba(34, 197, 94, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(34,197,94,0.1);
+}
+.account-card:hover::before { opacity: 1; }
 
 .account-card.inactive {
   opacity: 0.5;
+  animation: card-reveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .account-left {
@@ -67,8 +107,14 @@
   font-size: 20px;
   font-weight: 700;
   color: #f8fbff;
+  transition: text-shadow 0.2s;
 }
 
+.account-card:hover .account-saldo {
+  text-shadow: 0 0 18px rgba(248,251,255,0.3);
+}
+
+/* ── Total consolidado ── */
 .total-row {
   display: flex;
   justify-content: space-between;
@@ -77,6 +123,12 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   margin-top: 8px;
   margin-bottom: 24px;
+  animation: total-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+@keyframes total-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .total-label {
@@ -89,4 +141,11 @@
   font-size: 22px;
   font-weight: 700;
   color: #4ade80;
+  text-shadow: 0 0 24px rgba(74,222,128,0.35);
+  animation: value-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+}
+
+@keyframes value-pop {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
 }

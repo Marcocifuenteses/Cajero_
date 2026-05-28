@@ -60,21 +60,31 @@ function layoutBase(titulo, cuerpo) {
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>${titulo}</title>
 </head>
-<body style="margin:0;padding:0;background:#f0f2f5;font-family:Arial,Helvetica,sans-serif;">
+<body style="margin:0;padding:0;background:#060d16;font-family:Arial,Helvetica,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;">
   <tr><td align="center">
     <table width="580" cellpadding="0" cellspacing="0"
-           style="background:#ffffff;border-radius:10px;overflow:hidden;
-                  box-shadow:0 4px 16px rgba(0,0,0,0.12);">
+           style="background:#0c1826;border-radius:14px;overflow:hidden;
+                  border:1px solid rgba(34,197,94,0.18);
+                  box-shadow:0 0 40px rgba(34,197,94,0.08),0 8px 32px rgba(0,0,0,0.6);">
 
       <!-- Header -->
       <tr>
-        <td style="background:linear-gradient(135deg,#1a237e 0%,#283593 100%);
-                   padding:32px 40px;text-align:center;">
-          <div style="font-size:32px;margin-bottom:8px;">🏦</div>
-          <h1 style="margin:0;color:#ffffff;font-size:22px;letter-spacing:1px;
-                     font-weight:700;">Banco ATM Digital</h1>
-          <p style="margin:6px 0 0;color:#9fa8da;font-size:13px;">
+        <td style="background:linear-gradient(160deg,#040e1c 0%,#071828 100%);
+                   padding:32px 40px;text-align:center;
+                   border-bottom:1px solid rgba(34,197,94,0.2);">
+          <!-- Logo mark -->
+          <div style="display:inline-block;background:rgba(34,197,94,0.1);
+                      border:1px solid rgba(34,197,94,0.3);border-radius:10px;
+                      padding:10px 18px;margin-bottom:14px;">
+            <span style="font-family:'Courier New',Courier,monospace;
+                         font-size:11px;font-weight:700;letter-spacing:4px;
+                         color:#22c55e;text-transform:uppercase;">
+              &#9632; FINTECH ATM
+            </span>
+          </div>
+          <p style="margin:0;color:rgba(226,245,226,0.4);font-size:12px;letter-spacing:2px;
+                    text-transform:uppercase;font-family:'Courier New',Courier,monospace;">
             Notificación de movimiento
           </p>
         </td>
@@ -82,18 +92,22 @@ function layoutBase(titulo, cuerpo) {
 
       <!-- Body -->
       <tr>
-        <td style="padding:36px 40px;">
+        <td style="padding:36px 40px;background:#0c1826;">
           ${cuerpo}
         </td>
       </tr>
 
       <!-- Footer -->
       <tr>
-        <td style="background:#f8f9fa;padding:20px 40px;
-                   border-top:1px solid #e9ecef;text-align:center;">
-          <p style="margin:0;color:#adb5bd;font-size:12px;line-height:1.6;">
-            Correo generado automáticamente — no responder.<br>
-            <strong style="color:#868e96;">¿No reconoces esta operación?</strong>
+        <td style="background:#060d16;padding:20px 40px;
+                   border-top:1px solid rgba(34,197,94,0.1);text-align:center;">
+          <p style="margin:0 0 6px;color:rgba(226,245,226,0.25);font-size:11px;
+                    font-family:'Courier New',Courier,monospace;letter-spacing:1px;">
+            Correo generado automáticamente — no responder.
+          </p>
+          <p style="margin:0;color:rgba(226,245,226,0.35);font-size:11px;">
+            <span style="color:#f59e0b;">&#9888;</span>
+            <strong style="color:rgba(226,245,226,0.5);">¿No reconoces esta operación?</strong>
             Contacta al banco de inmediato.
           </p>
         </td>
@@ -112,51 +126,61 @@ function layoutBase(titulo, cuerpo) {
 function fila(etiqueta, valor) {
   return `
   <tr>
-    <td style="padding:10px 0;color:#6c757d;font-size:14px;
-               border-bottom:1px solid #f1f3f5;width:45%;">${etiqueta}</td>
-    <td style="padding:10px 0;color:#212529;font-size:14px;
-               border-bottom:1px solid #f1f3f5;font-weight:600;
-               text-align:right;">${valor}</td>
+    <td style="padding:11px 0;color:rgba(226,245,226,0.45);font-size:13px;
+               border-bottom:1px solid rgba(34,197,94,0.08);width:45%;">
+      ${etiqueta}
+    </td>
+    <td style="padding:11px 0;color:#e2f5e2;font-size:13px;
+               border-bottom:1px solid rgba(34,197,94,0.08);font-weight:600;
+               text-align:right;font-family:'Courier New',Courier,monospace;">
+      ${valor}
+    </td>
   </tr>`;
 }
 
 
 // ─── Templates ───────────────────────────────────────────────────────────────
 
-function htmlRetiro({ nombre, cuenta_id, monto, saldo_nuevo }) {
+function htmlRetiro({ nombre, cuenta_id, numero_cuenta, monto, saldo_nuevo }) {
+  const cuentaLabel = numero_cuenta || `#${cuenta_id}`;
   const cuerpo = `
-    <p style="margin:0 0 6px;color:#6c757d;font-size:14px;">Hola,</p>
-    <h2 style="margin:0 0 24px;color:#212529;font-size:20px;">
+    <p style="margin:0 0 4px;color:rgba(226,245,226,0.45);font-size:13px;">Hola,</p>
+    <h2 style="margin:0 0 24px;color:#e2f5e2;font-size:20px;font-weight:700;">
       ${nombre || 'estimado cliente'}
     </h2>
 
     <!-- Badge -->
-    <div style="display:inline-block;background:#fff3e0;color:#e65100;
-                border:1px solid #ffcc80;border-radius:20px;
-                padding:6px 16px;font-size:13px;font-weight:700;
-                margin-bottom:24px;">
-      💸 Retiro realizado
+    <div style="display:inline-block;background:rgba(245,158,11,0.1);color:#f59e0b;
+                border:1px solid rgba(245,158,11,0.3);border-radius:20px;
+                padding:6px 16px;font-size:12px;font-weight:700;
+                margin-bottom:24px;font-family:'Courier New',Courier,monospace;
+                letter-spacing:1px;text-transform:uppercase;">
+      &#10148; Retiro realizado
     </div>
 
     <!-- Monto destacado -->
-    <div style="background:#fff8f0;border-left:4px solid #ff8f00;
-                border-radius:6px;padding:20px 24px;margin-bottom:28px;">
-      <p style="margin:0 0 4px;color:#6c757d;font-size:12px;text-transform:uppercase;
-                letter-spacing:1px;">Monto retirado</p>
-      <p style="margin:0;color:#e65100;font-size:32px;font-weight:700;">
+    <div style="background:rgba(245,158,11,0.06);border-left:3px solid #f59e0b;
+                border-radius:8px;padding:20px 24px;margin-bottom:28px;">
+      <p style="margin:0 0 6px;color:rgba(226,245,226,0.4);font-size:11px;
+                text-transform:uppercase;letter-spacing:2px;
+                font-family:'Courier New',Courier,monospace;">
+        Monto retirado
+      </p>
+      <p style="margin:0;color:#f59e0b;font-size:34px;font-weight:700;
+                font-family:'Courier New',Courier,monospace;letter-spacing:1px;">
         ${formatMonto(monto)}
       </p>
     </div>
 
     <!-- Detalles -->
     <table width="100%" cellpadding="0" cellspacing="0">
-      ${fila('Cuenta', `#${cuenta_id}`)}
+      ${fila('Cuenta', cuentaLabel)}
       ${fila('Saldo anterior', formatMonto(parseFloat(saldo_nuevo) + parseFloat(monto)))}
-      ${fila('Saldo actual', formatMonto(saldo_nuevo))}
+      ${fila('Saldo actual', `<span style="color:#22c55e;">${formatMonto(saldo_nuevo)}</span>`)}
       ${fila('Fecha y hora', formatFecha())}
     </table>
   `;
-  return layoutBase('Retiro realizado', cuerpo);
+  return layoutBase('Retiro realizado — Fintech ATM', cuerpo);
 }
 
 
@@ -165,27 +189,32 @@ function htmlTransferenciaEnviada({
   numero_cuenta_origen, numero_cuenta_destino,
   monto, saldo_nuevo
 }) {
-  const cuentaOrigenLabel = numero_cuenta_origen || 'N/D';
+  const cuentaOrigenLabel  = numero_cuenta_origen  || 'N/D';
   const cuentaDestinoLabel = numero_cuenta_destino || 'N/D';
 
   const cuerpo = `
-    <p style="margin:0 0 6px;color:#6c757d;font-size:14px;">Hola,</p>
-    <h2 style="margin:0 0 24px;color:#212529;font-size:20px;">
+    <p style="margin:0 0 4px;color:rgba(226,245,226,0.45);font-size:13px;">Hola,</p>
+    <h2 style="margin:0 0 24px;color:#e2f5e2;font-size:20px;font-weight:700;">
       ${nombre || 'estimado cliente'}
     </h2>
 
-    <div style="display:inline-block;background:#fff3e0;color:#e65100;
-                border:1px solid #ffcc80;border-radius:20px;
-                padding:6px 16px;font-size:13px;font-weight:700;
-                margin-bottom:24px;">
-      🔁 Transferencia enviada
+    <div style="display:inline-block;background:rgba(59,130,246,0.1);color:#60a5fa;
+                border:1px solid rgba(59,130,246,0.3);border-radius:20px;
+                padding:6px 16px;font-size:12px;font-weight:700;
+                margin-bottom:24px;font-family:'Courier New',Courier,monospace;
+                letter-spacing:1px;text-transform:uppercase;">
+      &#10148; Transferencia enviada
     </div>
 
-    <div style="background:#fff8f0;border-left:4px solid #ff8f00;
-                border-radius:6px;padding:20px 24px;margin-bottom:28px;">
-      <p style="margin:0 0 4px;color:#6c757d;font-size:12px;text-transform:uppercase;
-                letter-spacing:1px;">Monto transferido</p>
-      <p style="margin:0;color:#e65100;font-size:32px;font-weight:700;">
+    <div style="background:rgba(59,130,246,0.06);border-left:3px solid #3b82f6;
+                border-radius:8px;padding:20px 24px;margin-bottom:28px;">
+      <p style="margin:0 0 6px;color:rgba(226,245,226,0.4);font-size:11px;
+                text-transform:uppercase;letter-spacing:2px;
+                font-family:'Courier New',Courier,monospace;">
+        Monto transferido
+      </p>
+      <p style="margin:0;color:#60a5fa;font-size:34px;font-weight:700;
+                font-family:'Courier New',Courier,monospace;letter-spacing:1px;">
         ${formatMonto(monto)}
       </p>
     </div>
@@ -195,11 +224,11 @@ function htmlTransferenciaEnviada({
       ${fila('No. cuenta origen', cuentaOrigenLabel)}
       ${fila('Beneficiario', nombre_destino || 'N/D')}
       ${fila('No. cuenta destino', cuentaDestinoLabel)}
-      ${fila('Saldo actual', formatMonto(saldo_nuevo))}
+      ${fila('Saldo actual', `<span style="color:#22c55e;">${formatMonto(saldo_nuevo)}</span>`)}
       ${fila('Fecha y hora', formatFecha())}
     </table>
   `;
-  return layoutBase('Transferencia enviada', cuerpo);
+  return layoutBase('Transferencia enviada — Fintech ATM', cuerpo);
 }
 
 
@@ -208,27 +237,32 @@ function htmlTransferenciaRecibida({
   numero_cuenta_origen, numero_cuenta_destino,
   monto, saldo_nuevo
 }) {
-  const cuentaOrigenLabel = numero_cuenta_origen || 'N/D';
+  const cuentaOrigenLabel  = numero_cuenta_origen  || 'N/D';
   const cuentaDestinoLabel = numero_cuenta_destino || 'N/D';
 
   const cuerpo = `
-    <p style="margin:0 0 6px;color:#6c757d;font-size:14px;">Hola,</p>
-    <h2 style="margin:0 0 24px;color:#212529;font-size:20px;">
+    <p style="margin:0 0 4px;color:rgba(226,245,226,0.45);font-size:13px;">Hola,</p>
+    <h2 style="margin:0 0 24px;color:#e2f5e2;font-size:20px;font-weight:700;">
       ${nombre || 'estimado cliente'}
     </h2>
 
-    <div style="display:inline-block;background:#e8f5e9;color:#2e7d32;
-                border:1px solid #a5d6a7;border-radius:20px;
-                padding:6px 16px;font-size:13px;font-weight:700;
-                margin-bottom:24px;">
-      ✅ Transferencia recibida
+    <div style="display:inline-block;background:rgba(34,197,94,0.1);color:#22c55e;
+                border:1px solid rgba(34,197,94,0.3);border-radius:20px;
+                padding:6px 16px;font-size:12px;font-weight:700;
+                margin-bottom:24px;font-family:'Courier New',Courier,monospace;
+                letter-spacing:1px;text-transform:uppercase;">
+      &#10004; Transferencia recibida
     </div>
 
-    <div style="background:#f1f8f1;border-left:4px solid #43a047;
-                border-radius:6px;padding:20px 24px;margin-bottom:28px;">
-      <p style="margin:0 0 4px;color:#6c757d;font-size:12px;text-transform:uppercase;
-                letter-spacing:1px;">Monto recibido</p>
-      <p style="margin:0;color:#2e7d32;font-size:32px;font-weight:700;">
+    <div style="background:rgba(34,197,94,0.06);border-left:3px solid #22c55e;
+                border-radius:8px;padding:20px 24px;margin-bottom:28px;">
+      <p style="margin:0 0 6px;color:rgba(226,245,226,0.4);font-size:11px;
+                text-transform:uppercase;letter-spacing:2px;
+                font-family:'Courier New',Courier,monospace;">
+        Monto recibido
+      </p>
+      <p style="margin:0;color:#22c55e;font-size:34px;font-weight:700;
+                font-family:'Courier New',Courier,monospace;letter-spacing:1px;">
         ${formatMonto(monto)}
       </p>
     </div>
@@ -238,49 +272,55 @@ function htmlTransferenciaRecibida({
       ${fila('No. cuenta origen', cuentaOrigenLabel)}
       ${fila('Beneficiario', nombre || 'N/D')}
       ${fila('No. cuenta destino', cuentaDestinoLabel)}
-      ${fila('Saldo actual', formatMonto(saldo_nuevo))}
+      ${fila('Saldo actual', `<span style="color:#22c55e;">${formatMonto(saldo_nuevo)}</span>`)}
       ${fila('Fecha y hora', formatFecha())}
     </table>
   `;
-  return layoutBase('Transferencia recibida', cuerpo);
+  return layoutBase('Transferencia recibida — Fintech ATM', cuerpo);
 }
 
 
 function htmlOperacionFallida({ nombre, tipo, monto, motivo, saldo_actual }) {
   const cuerpo = `
-    <p style="margin:0 0 6px;color:#6c757d;font-size:14px;">Hola,</p>
-    <h2 style="margin:0 0 24px;color:#212529;font-size:20px;">
+    <p style="margin:0 0 4px;color:rgba(226,245,226,0.45);font-size:13px;">Hola,</p>
+    <h2 style="margin:0 0 24px;color:#e2f5e2;font-size:20px;font-weight:700;">
       ${nombre || 'estimado cliente'}
     </h2>
 
-    <div style="display:inline-block;background:#fdecea;color:#c62828;
-                border:1px solid #ef9a9a;border-radius:20px;
-                padding:6px 16px;font-size:13px;font-weight:700;
-                margin-bottom:24px;">
-      ⚠️ Operación fallida
+    <div style="display:inline-block;background:rgba(239,68,68,0.1);color:#f87171;
+                border:1px solid rgba(239,68,68,0.3);border-radius:20px;
+                padding:6px 16px;font-size:12px;font-weight:700;
+                margin-bottom:24px;font-family:'Courier New',Courier,monospace;
+                letter-spacing:1px;text-transform:uppercase;">
+      &#9888; Operación fallida
     </div>
 
-    <div style="background:#fdecea;border-left:4px solid #c62828;
-                border-radius:6px;padding:20px 24px;margin-bottom:28px;">
-      <p style="margin:0 0 4px;color:#6c757d;font-size:12px;text-transform:uppercase;
-                letter-spacing:1px;">Monto solicitado</p>
-      <p style="margin:0;color:#c62828;font-size:32px;font-weight:700;">
+    <div style="background:rgba(239,68,68,0.06);border-left:3px solid #ef4444;
+                border-radius:8px;padding:20px 24px;margin-bottom:28px;">
+      <p style="margin:0 0 6px;color:rgba(226,245,226,0.4);font-size:11px;
+                text-transform:uppercase;letter-spacing:2px;
+                font-family:'Courier New',Courier,monospace;">
+        Monto solicitado
+      </p>
+      <p style="margin:0;color:#f87171;font-size:34px;font-weight:700;
+                font-family:'Courier New',Courier,monospace;letter-spacing:1px;">
         ${formatMonto(monto)}
       </p>
     </div>
 
     <table width="100%" cellpadding="0" cellspacing="0">
       ${fila('Tipo de operación', tipo)}
-      ${fila('Motivo del rechazo', `<span style="color:#c62828;font-weight:700;">${motivo}</span>`)}
+      ${fila('Motivo del rechazo', `<span style="color:#f87171;font-weight:700;">${motivo}</span>`)}
       ${saldo_actual != null ? fila('Saldo disponible', formatMonto(saldo_actual)) : ''}
       ${fila('Fecha y hora', formatFecha())}
     </table>
 
-    <p style="margin:24px 0 0;color:#6c757d;font-size:13px;line-height:1.6;">
+    <p style="margin:24px 0 0;color:rgba(226,245,226,0.4);font-size:12px;line-height:1.6;
+              font-family:'Courier New',Courier,monospace;">
       Si no reconoces este intento de operación, contacta al banco de inmediato.
     </p>
   `;
-  return layoutBase('Operación fallida', cuerpo);
+  return layoutBase('Operación fallida — Fintech ATM', cuerpo);
 }
 
 
@@ -293,7 +333,7 @@ async function enviar({ to, subject, html, text }) {
   }
 
   const info = await transporter.sendMail({
-    from: `"Banco ATM Digital" <${FROM_EMAIL}>`,
+    from: `"Fintech ATM" <${FROM_EMAIL}>`,
     to,
     subject,
     text: text || subject,

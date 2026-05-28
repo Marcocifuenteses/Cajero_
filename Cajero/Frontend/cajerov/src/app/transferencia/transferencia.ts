@@ -27,6 +27,7 @@ export class Transferencia implements OnInit {
   confirmando = signal(false);
   cargando = signal(false);
   comprobante = signal<any | null>(null);
+  mostrandoResultados = signal(false);
 
   private atm = inject(AtmService);
   private route = inject(ActivatedRoute);
@@ -63,9 +64,10 @@ export class Transferencia implements OnInit {
     try {
       const res = await this.atm.buscarCuentaPorTelefono(this.telefonoDestino);
       this.resultadoBusqueda.set(res);
-      // Si solo tiene una cuenta, seleccionarla automáticamente
       if (res.cuentas.length === 1) {
         this.seleccionarCuentaDestino(res.cuentas[0]);
+      } else {
+        this.mostrandoResultados.set(true);
       }
     } catch (e: any) {
       this.error.set(e?.error?.error || e?.message || 'No se encontró el destinatario');
@@ -77,6 +79,7 @@ export class Transferencia implements OnInit {
   seleccionarCuentaDestino(cuenta: any) {
     this.cuentaDestinoObj.set(cuenta);
     this.cuentaDestino = String(cuenta.id);
+    this.mostrandoResultados.set(false);
     this.error.set('');
   }
 
@@ -101,6 +104,10 @@ export class Transferencia implements OnInit {
     this.confirmando.set(false);
   }
 
+  imprimir() {
+    window.print();
+  }
+
   async enviarTransferencia() {
     if (this.cargando()) return;
     this.error.set('');
@@ -109,13 +116,15 @@ export class Transferencia implements OnInit {
     const destino = Number(this.cuentaDestino);
     const monto = Number(this.monto);
     try {
-      await this.atm.transferencia(origen, destino, monto);
+      const response = await this.atm.transferencia(origen, destino, monto);
       this.confirmando.set(false);
       this.comprobante.set({
+        titular_origen: this.userName(),
         desde: this.cuentaOrigenObj,
         para: this.resultadoBusqueda()?.titular,
         cuentaDestino: this.cuentaDestinoObj(),
         monto,
+        auth_num: response.transaccion_id,
         fecha: new Date()
       });
       this.monto = null;

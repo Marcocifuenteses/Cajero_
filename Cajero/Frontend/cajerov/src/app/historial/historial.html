@@ -1,8 +1,8 @@
 <div class="view">
   @if (cargando()) { <div class="loading-bar"></div> }
+
   <div class="eyebrow">Historial</div>
   <div class="title">Movimientos de {{ firstName }}</div>
-  <div class="subtitle">Últimas transacciones de tu cuenta seleccionada.</div>
 
   @if (error()) {
     <p class="error">{{ error() }}</p>
@@ -24,30 +24,33 @@
     </select>
   </label>
 
-  @if (transacciones().length > 0) {
-    <div class="tx-list">
-      @for (tx of transacciones(); track tx.id) {
-        <div class="tx-item">
-          <div class="tx-left">
-            <div class="tx-type">{{ tx.tipo_transaccion | titlecase }}</div>
-            <div class="tx-desc">{{ tx.descripcion || tx.referencia || '' }}</div>
-            <div class="tx-date">{{ tx.fecha | date:'dd/MM/yyyy HH:mm' }}</div>
-          </div>
-          <div class="tx-right">
-            <div class="tx-amount" [class.neg]="esNegativo(tx)" [class.pos]="!esNegativo(tx)">
-              {{ esNegativo(tx) ? '−' : '+' }} Q {{ tx.monto | number:'1.2-2' }}
+  <!-- Zona de scroll interno para la lista -->
+  <div class="inner-scroll">
+    @if (transacciones().length > 0) {
+      <div class="tx-list">
+        @for (tx of transacciones(); track tx.id) {
+          <div class="tx-item">
+            <div class="tx-left">
+              <div class="tx-type">{{ tx.tipo_transaccion | titlecase }}</div>
+              <div class="tx-desc">{{ tx.descripcion || tx.referencia || '' }}</div>
+              <div class="tx-date">{{ tx.fecha | date:'dd/MM/yyyy HH:mm' }}</div>
             </div>
-            @if (tx.saldo_nuevo != null) {
-              <div class="tx-balance">Saldo: Q {{ tx.saldo_nuevo | number:'1.2-2' }}</div>
-            }
-            <div class="tx-auth">{{ numAuth(tx.id) }}</div>
+            <div class="tx-right">
+              <div class="tx-amount" [class.neg]="esNegativo(tx)" [class.pos]="!esNegativo(tx)">
+                {{ esNegativo(tx) ? '−' : '+' }} Q {{ tx.monto | number:'1.2-2' }}
+              </div>
+              @if (tx.saldo_nuevo != null) {
+                <div class="tx-balance">Saldo: Q {{ tx.saldo_nuevo | number:'1.2-2' }}</div>
+              }
+              <div class="tx-auth">{{ numAuth(tx.id) }}</div>
+            </div>
           </div>
-        </div>
-      }
-    </div>
-  } @else if (cuentaSeleccionada && !error()) {
-    <p class="empty-msg">No hay transacciones en esta cuenta.</p>
-  }
+        }
+      </div>
+    } @else if (cuentaSeleccionada && !error()) {
+      <p class="empty-msg">No hay transacciones en esta cuenta.</p>
+    }
+  </div>
 
   @if (totalPaginas() > 1) {
     <div class="pagination">

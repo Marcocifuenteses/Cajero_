@@ -268,7 +268,7 @@ exports.retiro = async ({ cuenta_id, monto }) => {
       console.warn('[Notificación] Error enviando correo de retiro:', mailErr.message);
     }
 
-    return { message: 'Retiro exitoso', saldo_actual: nuevoSaldo };
+    return { message: 'Retiro exitoso', saldo_actual: nuevoSaldo, transaccion_id: trans.rows[0].id };
   } catch (e) {
     await client.query('ROLLBACK');
     throw e;
@@ -462,10 +462,11 @@ exports.transferencia = async ({ cuenta_origen, cuenta_destino, monto }) => {
     const ncOrigen  = origenRow.numero_cuenta  || String(origenId);
     const ncDestino = destinoRow.numero_cuenta || String(destinoId);
 
-    await client.query(
+    const txOrigen = await client.query(
       `INSERT INTO transacciones
        (cuenta_id, tipo_transaccion, monto, saldo_anterior, saldo_nuevo, descripcion, referencia)
-       VALUES ($1,'transferencia_enviada',$2,$3,$4,$5,$6)`,
+       VALUES ($1,'transferencia_enviada',$2,$3,$4,$5,$6)
+       RETURNING id`,
       [origenId, montoNum, origenRow.saldo, nuevoOrigen,
        `Transferencia enviada a cuenta ${ncDestino}`, ATM_CODIGO]
     );
@@ -529,7 +530,7 @@ exports.transferencia = async ({ cuenta_origen, cuenta_destino, monto }) => {
       console.warn('[Notificación] Error enviando correos de transferencia:', mailErr.message);
     }
 
-    return { message: 'Transferencia exitosa' };
+    return { message: 'Transferencia exitosa', transaccion_id: txOrigen.rows[0].id };
   } catch (e) {
     await client.query('ROLLBACK');
     throw e;

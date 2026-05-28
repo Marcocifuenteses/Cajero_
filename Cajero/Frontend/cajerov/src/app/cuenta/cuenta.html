@@ -1,62 +1,59 @@
 <div class="view">
   <div class="eyebrow">Cuenta</div>
-  <div class="title">Tus saldos, {{ firstName }}</div>
-  <div class="subtitle">Visualiza tus cuentas registradas.</div>
+  <div class="title">Tus cuentas, {{ firstName }}</div>
 
   @if (error()) {
     <p class="error">{{ error() }}</p>
   }
 
-  @if (cuentas().length > 0) {
-    <div class="account-grid">
-      @for (cuenta of cuentas(); track cuenta.id) {
-        <div class="account-card" [class.inactive]="!cuenta.activa">
+  <!-- Zona de scroll interno para las tarjetas de cuenta -->
+  <div class="inner-scroll">
+    @if (cuentas().length > 0) {
+      <div class="account-grid">
+        @for (cuenta of cuentas(); track cuenta.id) {
+          <div class="account-card" [class.inactive]="!cuenta.activa">
 
-          <!-- Estado de la cuenta -->
-          <div class="account-header">
-            <span class="account-tipo">{{ cuenta.tipo_cuenta || 'Cuenta' }}</span>
-            <span class="account-badge" [class.badge-activa]="cuenta.activa" [class.badge-inactiva]="!cuenta.activa">
-              {{ cuenta.activa ? 'Activa' : 'Inactiva' }}
-            </span>
-          </div>
-
-          <!-- Número de cuenta -->
-          <div class="account-number">{{ cuenta.numero_cuenta || cuenta.id }}</div>
-
-          <!-- Saldo y moneda -->
-          <div class="account-balance-row">
-            <div class="account-balance">Q {{ cuenta.saldo | number:'1.2-2' }}</div>
-            <div class="account-moneda">{{ cuenta.moneda || 'GTQ' }}</div>
-          </div>
-
-          <!-- Límite diario -->
-          @if (cuenta.limite_diario) {
-            <div class="account-limit">
-              Límite diario: Q {{ cuenta.limite_diario | number:'1.2-2' }}
+            <div class="account-header">
+              <span class="account-tipo">{{ cuenta.tipo_cuenta || 'Cuenta' }}</span>
+              <span class="account-badge" [class.badge-activa]="cuenta.activa" [class.badge-inactiva]="!cuenta.activa">
+                {{ cuenta.activa ? 'Activa' : 'Inactiva' }}
+              </span>
             </div>
-          }
 
-          <!-- Acciones -->
-          <div class="account-actions">
-            <button class="btn secondary"
-              [routerLink]="['/transferencia']"
-              [queryParams]="{ origen: cuenta.id }"
-              [disabled]="!cuenta.activa">
-              Transferir
-            </button>
-            <button class="btn secondary"
-              [routerLink]="['/historial']"
-              [queryParams]="{ cuenta: cuenta.id }">
-              Historial
-            </button>
+            <div class="account-number">{{ cuenta.numero_cuenta || cuenta.id }}</div>
+
+            <div class="account-balance-row">
+              <div class="account-balance">Q {{ cuenta.saldo | number:'1.2-2' }}</div>
+              <div class="account-moneda">{{ cuenta.moneda || 'GTQ' }}</div>
+            </div>
+
+            @if (cuenta.limite_diario) {
+              <div class="account-limit">
+                Límite diario: Q {{ cuenta.limite_diario | number:'1.2-2' }}
+              </div>
+            }
+
+            <div class="account-actions">
+              <button class="btn secondary"
+                [routerLink]="['/transferencia']"
+                [queryParams]="{ origen: cuenta.id }"
+                [disabled]="!cuenta.activa">
+                Transferir
+              </button>
+              <button class="btn secondary"
+                [routerLink]="['/historial']"
+                [queryParams]="{ cuenta: cuenta.id }">
+                Historial
+              </button>
+            </div>
+
           </div>
-
-        </div>
-      }
-    </div>
-  } @else {
-    <p class="empty-msg">No se encontraron cuentas registradas.</p>
-  }
+        }
+      </div>
+    } @else {
+      <p class="empty-msg">No se encontraron cuentas registradas.</p>
+    }
+  </div>
 
   <div class="actions">
     <button class="btn secondary" routerLink="/menu">Volver al menú</button>

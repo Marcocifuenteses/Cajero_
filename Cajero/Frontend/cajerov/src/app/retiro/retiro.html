@@ -1,116 +1,181 @@
 <div class="view">
   @if (cargando()) { <div class="loading-bar"></div> }
+
+  <!-- ── Modal: Confirmación ─────────────────────── -->
+  @if (confirmando()) {
+    <div class="modal-overlay">
+      <div class="modal-card modal-confirm">
+        <div class="modal-title">¿Confirmas este retiro?</div>
+        <div class="modal-row">
+          <span class="modal-label">Cuenta</span>
+          <span class="modal-value">
+            {{ cuentaSeleccionadaObj?.tipo_cuenta || 'Cuenta' }}
+            @if (cuentaSeleccionadaObj?.numero_cuenta) { · {{ cuentaSeleccionadaObj.numero_cuenta }} }
+          </span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Saldo disponible</span>
+          <span class="modal-value">Q {{ cuentaSeleccionadaObj?.saldo | number:'1.2-2' }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Monto a retirar</span>
+          <span class="modal-amount">Q {{ monto | number:'1.2-2' }}</span>
+        </div>
+        <div class="modal-actions">
+          <button class="btn secondary" type="button" (click)="cancelarConfirmacion()" [disabled]="cargando()">Cancelar</button>
+          <button class="btn primary" type="button" (click)="enviarRetiro()" [disabled]="cargando()">
+            {{ cargando() ? 'Procesando...' : 'Confirmar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Modal: Comprobante ──────────────────────── -->
+  @if (comprobante()) {
+    <div class="modal-overlay">
+      <div class="modal-card modal-success">
+        <div class="modal-title green">Retiro exitoso</div>
+        <div class="modal-row">
+          <span class="modal-label">Titular</span>
+          <span class="modal-value">{{ comprobante().titular }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">No. de cuenta</span>
+          <span class="modal-value">
+            {{ comprobante().cuenta?.numero_cuenta || comprobante().cuenta?.tipo_cuenta || 'Cuenta' }}
+          </span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Monto retirado</span>
+          <span class="modal-amount">Q {{ comprobante().monto | number:'1.2-2' }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Saldo nuevo</span>
+          <span class="modal-value">Q {{ comprobante().saldo_nuevo | number:'1.2-2' }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Fecha</span>
+          <span class="modal-value">{{ comprobante().fecha | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Hora</span>
+          <span class="modal-value">{{ comprobante().fecha | date:'HH:mm:ss' }}</span>
+        </div>
+        @if (comprobante().auth_num) {
+          <div class="modal-row">
+            <span class="modal-label">No. autorización</span>
+            <span class="modal-value modal-auth">#{{ comprobante().auth_num | number:'6.0-0' }}</span>
+          </div>
+        }
+        <div class="modal-actions">
+          <button class="btn secondary" type="button" (click)="comprobante.set(null)">Cerrar</button>
+          <button class="btn primary" type="button" (click)="imprimir()">Imprimir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección exclusiva para impresión -->
+    <div class="print-receipt" id="comprobante">
+      <div class="pr-header">
+        <div class="pr-logo">FINTECH ATM</div>
+        <div class="pr-tipo">COMPROBANTE DE RETIRO</div>
+      </div>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      <table class="pr-table">
+        <tr>
+          <td class="pr-lbl">Titular</td>
+          <td class="pr-val">{{ comprobante().titular }}</td>
+        </tr>
+        <tr>
+          <td class="pr-lbl">No. de cuenta</td>
+          <td class="pr-val">{{ comprobante().cuenta?.numero_cuenta || comprobante().cuenta?.tipo_cuenta }}</td>
+        </tr>
+        <tr>
+          <td class="pr-lbl">Tipo de cuenta</td>
+          <td class="pr-val">{{ comprobante().cuenta?.tipo_cuenta }}</td>
+        </tr>
+      </table>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      <table class="pr-table">
+        <tr>
+          <td class="pr-lbl">Fecha</td>
+          <td class="pr-val">{{ comprobante().fecha | date:'dd/MM/yyyy' }}</td>
+        </tr>
+        <tr>
+          <td class="pr-lbl">Hora</td>
+          <td class="pr-val">{{ comprobante().fecha | date:'HH:mm:ss' }}</td>
+        </tr>
+      </table>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      <div class="pr-monto-label">MONTO RETIRADO</div>
+      <div class="pr-monto">Q {{ comprobante().monto | number:'1.2-2' }}</div>
+      <div class="pr-saldo">Saldo nuevo: Q {{ comprobante().saldo_nuevo | number:'1.2-2' }}</div>
+      <div class="pr-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+      @if (comprobante().auth_num) {
+        <div class="pr-auth-label">No. de Autorización</div>
+        <div class="pr-auth">#{{ comprobante().auth_num | number:'6.0-0' }}</div>
+      }
+      <div class="pr-footer">CONSERVE ESTE COMPROBANTE</div>
+    </div>
+  }
+
+  <!-- ── Formulario principal ────────────────────── -->
   <div class="eyebrow">Retiro</div>
   <div class="title">Retiro para {{ firstName }}</div>
-  <div class="subtitle">Elige un monto o escríbelo tú mismo.</div>
 
   @if (error()) {
     <p class="error">{{ error() }}</p>
   }
 
-  @if (comprobante()) {
-    <div class="comprobante" id="comprobante">
-      <div class="comprobante-header">Comprobante de Retiro</div>
-      <div class="comprobante-row">
-        <span>Cuenta</span>
-        <span>{{ comprobante().cuenta?.tipo_cuenta || 'Cuenta' }}{{ comprobante().cuenta?.numero_cuenta ? ' · ' + comprobante().cuenta.numero_cuenta : '' }}</span>
-      </div>
-      <div class="comprobante-row">
-        <span>Monto retirado</span>
-        <span>Q {{ comprobante().monto | number:'1.2-2' }}</span>
-      </div>
-      <div class="comprobante-row">
-        <span>Saldo nuevo</span>
-        <span>Q {{ comprobante().saldo_nuevo | number:'1.2-2' }}</span>
-      </div>
-      <div class="comprobante-row">
-        <span>Fecha</span>
-        <span>{{ comprobante().fecha | date:'dd/MM/yyyy HH:mm' }}</span>
-      </div>
-      <div class="comprobante-actions">
-        <button class="btn secondary" type="button" (click)="comprobante.set(null)">Cerrar</button>
-        <button class="btn primary" type="button" onclick="window.print()">Imprimir</button>
-      </div>
-    </div>
-  }
+  <label class="label">
+    Selecciona cuenta
+    <select class="input" [(ngModel)]="cuentaSeleccionada" name="cuentaSeleccionada">
+      <option value="">Elige una cuenta</option>
+      @for (cuenta of cuentas(); track cuenta.id) {
+        <option [value]="cuenta.id">
+          {{ cuenta.tipo_cuenta || 'Cuenta' }}
+          @if (cuenta.numero_cuenta) { · {{ cuenta.numero_cuenta }} }
+          — Q {{ cuenta.saldo | number:'1.2-2' }}
+          @if (!cuenta.activa) { (Inactiva) }
+        </option>
+      }
+    </select>
+  </label>
 
-  @if (!confirmando()) {
-    <label class="label">
-      Selecciona cuenta
-      <select class="input" [(ngModel)]="cuentaSeleccionada" name="cuentaSeleccionada">
-        <option value="">Elige una cuenta</option>
-        @for (cuenta of cuentas(); track cuenta.id) {
-          <option [value]="cuenta.id">
-            {{ cuenta.tipo_cuenta || 'Cuenta' }}
-            @if (cuenta.numero_cuenta) { · {{ cuenta.numero_cuenta }} }
-            — Q {{ cuenta.saldo | number:'1.2-2' }}
-            @if (!cuenta.activa) { (Inactiva) }
-          </option>
-        }
-      </select>
-    </label>
+  <div class="amounts">
+    <button class="amount-btn" type="button" (click)="setAmount(100)">
+      <span class="amount-value">Q 100</span>
+      <span class="amount-currency">GTQ</span>
+    </button>
+    <button class="amount-btn" type="button" (click)="setAmount(200)">
+      <span class="amount-value">Q 200</span>
+      <span class="amount-currency">GTQ</span>
+    </button>
+    <button class="amount-btn" type="button" (click)="setAmount(500)">
+      <span class="amount-value">Q 500</span>
+      <span class="amount-currency">GTQ</span>
+    </button>
+    <button class="amount-btn" type="button" (click)="setAmount(1000)">
+      <span class="amount-value">Q 1,000</span>
+      <span class="amount-currency">GTQ</span>
+    </button>
+  </div>
 
-    <div class="amounts">
-      <button class="amount-btn" type="button" (click)="setAmount(100)">
-        <span class="amount-value">Q 100</span>
-        <span class="amount-currency">GTQ</span>
-      </button>
-      <button class="amount-btn" type="button" (click)="setAmount(200)">
-        <span class="amount-value">Q 200</span>
-        <span class="amount-currency">GTQ</span>
-      </button>
-      <button class="amount-btn" type="button" (click)="setAmount(500)">
-        <span class="amount-value">Q 500</span>
-        <span class="amount-currency">GTQ</span>
-      </button>
-      <button class="amount-btn" type="button" (click)="setAmount(1000)">
-        <span class="amount-value">Q 1,000</span>
-        <span class="amount-currency">GTQ</span>
-      </button>
-    </div>
+  <label class="label">
+    Monto personalizado
+    <input
+      class="input"
+      type="number"
+      [(ngModel)]="monto"
+      placeholder="0.00"
+      min="0.01"
+      step="0.01"
+    />
+  </label>
 
-    <label class="label">
-      Monto personalizado
-      <input
-        class="input"
-        type="number"
-        [(ngModel)]="monto"
-        placeholder="Monto personalizado"
-        min="0.01"
-        step="0.01"
-      />
-    </label>
-
-    <div class="actions">
-      <button class="btn" routerLink="/menu">Volver</button>
-      <button class="btn primary" type="button" (click)="solicitarConfirmacion()">Retirar</button>
-    </div>
-  }
-
-  @if (confirmando()) {
-    <div class="confirm-box">
-      <div class="confirm-title">¿Confirmas este retiro?</div>
-      <div class="confirm-row">
-        <span class="confirm-label">Cuenta</span>
-        <span class="confirm-value">
-          {{ cuentaSeleccionadaObj?.tipo_cuenta || 'Cuenta' }}
-          @if (cuentaSeleccionadaObj?.numero_cuenta) { · {{ cuentaSeleccionadaObj.numero_cuenta }} }
-        </span>
-      </div>
-      <div class="confirm-row">
-        <span class="confirm-label">Monto</span>
-        <span class="confirm-value confirm-monto">Q {{ monto | number:'1.2-2' }}</span>
-      </div>
-      <div class="confirm-row">
-        <span class="confirm-label">Saldo disponible</span>
-        <span class="confirm-value">Q {{ cuentaSeleccionadaObj?.saldo | number:'1.2-2' }}</span>
-      </div>
-      <div class="actions">
-        <button class="btn secondary" type="button" (click)="cancelarConfirmacion()" [disabled]="cargando()">Cancelar</button>
-        <button class="btn primary" type="button" (click)="enviarRetiro()" [disabled]="cargando()">
-          {{ cargando() ? 'Procesando...' : 'Confirmar' }}
-        </button>
-      </div>
-    </div>
-  }
+  <div class="actions">
+    <button class="btn secondary" routerLink="/menu">Volver</button>
+    <button class="btn primary" type="button" (click)="solicitarConfirmacion()">Retirar</button>
+  </div>
 </div>

@@ -67,6 +67,10 @@ export class Retiro implements OnInit {
     this.confirmando.set(false);
   }
 
+  imprimir() {
+    window.print();
+  }
+
   async enviarRetiro() {
     if (this.cargando()) return;
     this.error.set('');
@@ -78,9 +82,11 @@ export class Retiro implements OnInit {
       this.confirmando.set(false);
       this.comprobante.set({
         tipo: 'Retiro',
+        titular: this.userName(),
         cuenta: this.cuentaSeleccionadaObj,
         monto,
         saldo_nuevo: response.saldo_actual,
+        auth_num: response.transaccion_id,
         fecha: new Date()
       });
       this.monto = null;

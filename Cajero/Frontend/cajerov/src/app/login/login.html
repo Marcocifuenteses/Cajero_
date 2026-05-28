@@ -3,13 +3,32 @@
 
   @if (step === 'welcome') {
     <div class="welcome-hero">
-      <div class="card-art"></div>
-      <div class="big-title">
-      <div class="big-title">
-  Bienvenido a Fintech.
-</div>
+
+      <!-- Tarjeta héroe animada -->
+      <div class="hero-card-wrap">
+        <div class="hero-glow"></div>
+        <div class="hero-card">
+          <div class="hero-card-chip"></div>
+          <div class="hero-card-brand">FINTECH</div>
+          <div class="hero-card-number">•••• •••• •••• ••••</div>
+          <div class="hero-card-shine"></div>
+        </div>
+        <div class="hero-particles">
+          <span class="particle p1"></span>
+          <span class="particle p2"></span>
+          <span class="particle p3"></span>
+        </div>
       </div>
-      <div class="subtitle">Tu cajero digital en un solo lugar.</div>
+
+      <div class="welcome-text">
+        <div class="eyebrow">Cajero Automático</div>
+        <div class="big-title">
+          Bienvenido a<br>
+          <span class="brand-name">Fintech.</span>
+        </div>
+        <div class="subtitle">Tu cajero digital seguro y rápido.</div>
+      </div>
+
       <div class="actions">
         <button class="btn primary" type="button" (click)="start()">Comenzar</button>
       </div>
