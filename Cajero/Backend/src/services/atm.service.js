@@ -1,5 +1,5 @@
 const db = require('../db/db');
-const { notificarRetiro, notificarTransferenciaEnviada, notificarTransferenciaRecibida, notificarOperacionFallida } = require('./mailer');
+const { notificarRetiro, notificarTransferenciaEnviada, notificarTransferenciaRecibida, notificarOperacionFallida, notificarTarjetaBloqueada } = require('./mailer');
 
 const MAX_INTENTOS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '3', 10);
 const ATM_CODIGO = process.env.ATM_CODIGO || 'ATM-001';
@@ -102,6 +102,26 @@ exports.login = async ({ numero_tarjeta, pin, ip_cliente }) => {
     );
 
     if (debeBloquear) {
+      // Notificar al usuario por correo
+      try {
+        const usuarioId = tarjeta.usuario_id ?? tarjeta.usuarioid ?? tarjeta.user_id ?? null;
+        if (usuarioId) {
+          const userRes = await db.query(`SELECT * FROM usuarios WHERE id = $1`, [usuarioId]);
+          if (userRes.rows.length > 0) {
+            const user = userRes.rows[0];
+            const email = getEmail(user);
+            if (email) {
+              await notificarTarjetaBloqueada(email, getNombre(user), {
+                numero_tarjeta: tarjeta.numero_tarjeta,
+                intentos:       nuevosIntentos,
+                atm_codigo:     ATM_CODIGO
+              });
+            }
+          }
+        }
+      } catch (mailErr) {
+        console.warn('[Notificación] Error enviando correo de bloqueo:', mailErr.message);
+      }
       throw new Error(`Tarjeta bloqueada por ${MAX_INTENTOS} intentos fallidos`);
     }
 
@@ -136,6 +156,49 @@ exports.login = async ({ numero_tarjeta, pin, ip_cliente }) => {
     owner_name: ownerName,
     sesion: sesion.rows[0]
   };
+};
+
+
+exports.desbloquearTarjeta = async ({ numero_tarjeta }) => {
+  if (!numero_tarjeta) throw new Error('Número de tarjeta requerido');
+
+  const result = await db.query(
+    `SELECT * FROM tarjetas WHERE numero_tarjeta = $1`,
+    [String(numero_tarjeta).trim()]
+  );
+
+  if (result.rows.length === 0) throw new Error('Tarjeta no encontrada');
+
+  const tarjeta = result.rows[0];
+
+  if (!tarjeta.bloqueada) throw new Error('La tarjeta no está bloqueada');
+
+  await db.query(
+    `UPDATE tarjetas SET bloqueada = false, intentos_fallidos = 0 WHERE id = $1`,
+    [tarjeta.id]
+  );
+
+  // Notificar al usuario que su tarjeta fue desbloqueada
+  try {
+    const usuarioId = tarjeta.usuario_id ?? tarjeta.usuarioid ?? tarjeta.user_id ?? null;
+    if (usuarioId) {
+      const userRes = await db.query(`SELECT * FROM usuarios WHERE id = $1`, [usuarioId]);
+      if (userRes.rows.length > 0) {
+        const user = userRes.rows[0];
+        const email = getEmail(user);
+        if (email) {
+          const { notificarTarjetaDesbloqueada } = require('./mailer');
+          await notificarTarjetaDesbloqueada(email, getNombre(user), {
+            numero_tarjeta: tarjeta.numero_tarjeta
+          });
+        }
+      }
+    }
+  } catch (mailErr) {
+    console.warn('[Notificación] Error enviando correo de desbloqueo:', mailErr.message);
+  }
+
+  return { message: 'Tarjeta desbloqueada correctamente', numero_tarjeta: tarjeta.numero_tarjeta };
 };
 
 

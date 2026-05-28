@@ -85,6 +85,18 @@ exports.buscarCuenta = async (req, res) => {
   }
 };
 
+exports.desbloquearTarjeta = async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || req.body?.admin_secret;
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'No autorizado' });
+  }
+  try {
+    res.json(await service.desbloquearTarjeta(req.body));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+};
+
 exports.testEmail = async (req, res) => {
   const to = req.query.to || process.env.ADMIN_EMAIL;
   if (!to) return res.status(400).json({ error: 'Falta parámetro "to" o ADMIN_EMAIL no configurado' });

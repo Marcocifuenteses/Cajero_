@@ -1,0 +1,108 @@
+/* ── Cuenta regresiva de inactividad ──────────────────────────── */
+
+/* Necesario para que el widget se posicione dentro del bisel */
+:host ::ng-deep .screen-bezel {
+  position: relative;
+}
+
+.idle-countdown {
+  position: absolute;
+  bottom: 2px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  animation: countdown-appear 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes countdown-appear {
+  from { opacity: 0; transform: scale(0.3) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+/* Anillo SVG */
+.idle-ring {
+  position: relative;
+  width: 46px;
+  height: 46px;
+}
+
+.idle-ring svg {
+  width: 46px;
+  height: 46px;
+  transform: rotate(-90deg);
+}
+
+.idle-ring-bg {
+  fill: none;
+  stroke: rgba(245, 158, 11, 0.15);
+  stroke-width: 2.8;
+}
+
+.idle-ring-fill {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 2.8;
+  stroke-dasharray: 100;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.85s linear, stroke 0.35s ease;
+  filter: drop-shadow(0 0 4px rgba(245,158,11,0.6));
+}
+
+/* Número central */
+.idle-number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: -0.02em;
+  transition: color 0.35s ease;
+}
+
+/* Etiqueta debajo */
+.idle-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 7px;
+  color: rgba(245, 158, 11, 0.65);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.35s ease;
+}
+
+/* Estado urgente (≤ 7 segundos) */
+.idle-countdown.urgent .idle-ring-bg {
+  stroke: rgba(239, 68, 68, 0.18);
+}
+
+.idle-countdown.urgent .idle-ring-fill {
+  stroke: #ef4444;
+  filter: drop-shadow(0 0 6px rgba(239,68,68,0.75));
+  animation: ring-danger-pulse 0.5s ease-in-out infinite;
+}
+
+.idle-countdown.urgent .idle-number {
+  color: #ef4444;
+  animation: number-danger-pulse 0.5s ease-in-out infinite;
+}
+
+.idle-countdown.urgent .idle-label {
+  color: rgba(239, 68, 68, 0.7);
+}
+
+@keyframes ring-danger-pulse {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(239,68,68,0.75)); }
+  50%       { opacity: 0.65; filter: drop-shadow(0 0 12px rgba(239,68,68,0.4)); }
+}
+
+@keyframes number-danger-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}

@@ -18,9 +18,12 @@ export class AtmService {
   sessionId = signal<string | null>(null);
   usuarioId = signal<number>(0);
   userName = signal<string>('');
+  idleCountdown = signal<number | null>(null);
 
-  private readonly IDLE_MS = 2 * 60 * 1000;
+  private readonly IDLE_MS    = 2 * 60 * 1000;
+  private readonly WARN_SECS  = 20;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
   private boundReset = () => this.resetIdle();
 
   constructor(private http: HttpClient, private router: Router) {
@@ -70,11 +73,37 @@ export class AtmService {
     );
     if (this.idleTimer) clearTimeout(this.idleTimer);
     this.idleTimer = null;
+    this.clearCountdown();
   }
 
   private resetIdle() {
     if (this.idleTimer) clearTimeout(this.idleTimer);
-    this.idleTimer = setTimeout(() => this.logout(), this.IDLE_MS);
+    this.clearCountdown();
+
+    // Arrancar la cuenta regresiva WARN_SECS antes del logout
+    this.idleTimer = setTimeout(() => this.startCountdown(), this.IDLE_MS - this.WARN_SECS * 1000);
+  }
+
+  private startCountdown() {
+    this.idleCountdown.set(this.WARN_SECS);
+    this.countdownInterval = setInterval(() => {
+      const current = this.idleCountdown();
+      if (current === null) return;
+      if (current <= 1) {
+        this.clearCountdown();
+        this.logout();
+      } else {
+        this.idleCountdown.set(current - 1);
+      }
+    }, 1000);
+  }
+
+  private clearCountdown() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
+    this.idleCountdown.set(null);
   }
 
   logout() {

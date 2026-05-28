@@ -14,4 +14,5 @@ router.get('/buscar-cuenta', validarSesion, atmController.buscarCuenta);
 router.get('/historial/:cuenta_id', validarSesion, atmController.historial);
 router.post('/transferencia', validarSesion, atmController.transferencia);
 router.get('/test-email', atmController.testEmail);
+router.post('/admin/desbloquear-tarjeta', atmController.desbloquearTarjeta);
 module.exports = router;

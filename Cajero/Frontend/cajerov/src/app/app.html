@@ -21,6 +21,22 @@
     <div class="screen">
       <router-outlet></router-outlet>
     </div>
+
+    <!-- Cuenta regresiva: vive en el bisel inferior, fuera de la pantalla -->
+    @if (countdown() !== null) {
+      <div class="idle-countdown" [class.urgent]="(countdown() ?? 20) <= 7">
+        <div class="idle-ring">
+          <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+            <circle class="idle-ring-bg" cx="18" cy="18" r="15.9"/>
+            <circle class="idle-ring-fill" cx="18" cy="18" r="15.9"
+                    [style.stroke-dashoffset]="ringOffset"/>
+          </svg>
+          <span class="idle-number">{{ countdown() }}</span>
+        </div>
+        <span class="idle-label">sesión</span>
+      </div>
+    }
+
   </div>
 
   <!-- Pie de la máquina -->

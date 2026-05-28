@@ -22,7 +22,10 @@ function inicializarTransporter() {
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS
-    }
+    },
+    pool: false,           // no reutilizar conexiones (evita conexiones obsoletas)
+    socketTimeout: 30000,  // 30 s timeout por si Gmail no responde
+    greetingTimeout: 15000
   });
 
   transporter.verify((err) => {
@@ -280,6 +283,100 @@ function htmlTransferenciaRecibida({
 }
 
 
+function htmlTarjetaBloqueada({ nombre, numero_tarjeta, intentos, atm_codigo }) {
+  const cardLabel = numero_tarjeta
+    ? `•••• •••• •••• ${String(numero_tarjeta).slice(-4)}`
+    : 'N/D';
+
+  const cuerpo = `
+    <p style="margin:0 0 4px;color:rgba(226,245,226,0.45);font-size:13px;">Hola,</p>
+    <h2 style="margin:0 0 24px;color:#e2f5e2;font-size:20px;font-weight:700;">
+      ${nombre || 'estimado cliente'}
+    </h2>
+
+    <div style="display:inline-block;background:rgba(239,68,68,0.1);color:#f87171;
+                border:1px solid rgba(239,68,68,0.3);border-radius:20px;
+                padding:6px 16px;font-size:12px;font-weight:700;
+                margin-bottom:24px;font-family:'Courier New',Courier,monospace;
+                letter-spacing:1px;text-transform:uppercase;">
+      &#128274; Tarjeta bloqueada
+    </div>
+
+    <div style="background:rgba(239,68,68,0.06);border-left:3px solid #ef4444;
+                border-radius:8px;padding:20px 24px;margin-bottom:28px;">
+      <p style="margin:0 0 8px;color:rgba(226,245,226,0.5);font-size:12px;
+                text-transform:uppercase;letter-spacing:2px;
+                font-family:'Courier New',Courier,monospace;">
+        Tu tarjeta ha sido bloqueada
+      </p>
+      <p style="margin:0;color:#f87171;font-size:14px;line-height:1.6;">
+        Se registraron <strong>${intentos}</strong> intentos fallidos de PIN consecutivos.
+        Por seguridad, el acceso ha sido suspendido.
+      </p>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${fila('Tarjeta', `<span style="font-family:'Courier New',monospace;letter-spacing:2px;">${cardLabel}</span>`)}
+      ${fila('Intentos fallidos', `<span style="color:#f87171;font-weight:700;">${intentos}</span>`)}
+      ${atm_codigo ? fila('Terminal', atm_codigo) : ''}
+      ${fila('Fecha y hora', formatFecha())}
+    </table>
+
+    <div style="margin-top:24px;padding:16px 20px;background:rgba(245,158,11,0.06);
+                border:1px solid rgba(245,158,11,0.2);border-radius:8px;">
+      <p style="margin:0;color:#fbbf24;font-size:13px;line-height:1.6;">
+        <strong>&#9888; ¿No fuiste tú?</strong><br>
+        Si no reconoces estos intentos, alguien pudo haber intentado acceder a tu cuenta.
+        Contacta al banco de inmediato para desbloquear tu tarjeta y revisar tu seguridad.
+      </p>
+    </div>
+  `;
+  return layoutBase('Tarjeta bloqueada — Fintech ATM', cuerpo);
+}
+
+
+function htmlTarjetaDesbloqueada({ nombre, numero_tarjeta }) {
+  const cardLabel = numero_tarjeta
+    ? `•••• •••• •••• ${String(numero_tarjeta).slice(-4)}`
+    : 'N/D';
+
+  const cuerpo = `
+    <p style="margin:0 0 4px;color:rgba(226,245,226,0.45);font-size:13px;">Hola,</p>
+    <h2 style="margin:0 0 24px;color:#e2f5e2;font-size:20px;font-weight:700;">
+      ${nombre || 'estimado cliente'}
+    </h2>
+
+    <div style="display:inline-block;background:rgba(34,197,94,0.1);color:#22c55e;
+                border:1px solid rgba(34,197,94,0.3);border-radius:20px;
+                padding:6px 16px;font-size:12px;font-weight:700;
+                margin-bottom:24px;font-family:'Courier New',Courier,monospace;
+                letter-spacing:1px;text-transform:uppercase;">
+      &#10004; Tarjeta desbloqueada
+    </div>
+
+    <div style="background:rgba(34,197,94,0.06);border-left:3px solid #22c55e;
+                border-radius:8px;padding:20px 24px;margin-bottom:28px;">
+      <p style="margin:0;color:rgba(226,245,226,0.7);font-size:14px;line-height:1.6;">
+        Tu tarjeta ha sido <strong style="color:#4ade80;">desbloqueada exitosamente</strong>.
+        Ya puedes utilizarla con normalidad en cualquier cajero Fintech ATM.
+      </p>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${fila('Tarjeta', `<span style="font-family:'Courier New',monospace;letter-spacing:2px;">${cardLabel}</span>`)}
+      ${fila('Estado', '<span style="color:#4ade80;font-weight:700;">Activa</span>')}
+      ${fila('Fecha y hora', formatFecha())}
+    </table>
+
+    <p style="margin:24px 0 0;color:rgba(226,245,226,0.4);font-size:12px;line-height:1.6;
+              font-family:'Courier New',Courier,monospace;">
+      Si no solicitaste este desbloqueo, contacta al banco de inmediato.
+    </p>
+  `;
+  return layoutBase('Tarjeta desbloqueada — Fintech ATM', cuerpo);
+}
+
+
 function htmlOperacionFallida({ nombre, tipo, monto, motivo, saldo_actual }) {
   const cuerpo = `
     <p style="margin:0 0 4px;color:rgba(226,245,226,0.45);font-size:13px;">Hola,</p>
@@ -389,6 +486,26 @@ async function notificarOperacionFallida(email, nombre, datos) {
 }
 
 
+async function notificarTarjetaDesbloqueada(email, nombre, datos) {
+  return enviar({
+    to: email,
+    subject: '✅ Tu tarjeta ha sido desbloqueada — Fintech ATM',
+    html: htmlTarjetaDesbloqueada({ nombre, ...datos }),
+    text: `Hola ${nombre || 'cliente'}, tu tarjeta ha sido desbloqueada exitosamente. Ya puedes usarla con normalidad.`
+  });
+}
+
+
+async function notificarTarjetaBloqueada(email, nombre, datos) {
+  return enviar({
+    to: email,
+    subject: '⚠️ Tu tarjeta ha sido bloqueada por seguridad — Fintech ATM',
+    html: htmlTarjetaBloqueada({ nombre, ...datos }),
+    text: `Hola ${nombre || 'cliente'}, tu tarjeta ${datos.numero_tarjeta || ''} fue bloqueada tras ${datos.intentos} intentos fallidos de PIN. Contacta al banco para desbloquearla.`
+  });
+}
+
+
 // Mantiene compatibilidad con el endpoint /atm/test-email
 async function sendEmail({ to, subject, text, html }) {
   return enviar({ to, subject, text, html });
@@ -400,5 +517,7 @@ module.exports = {
   notificarRetiro,
   notificarTransferenciaEnviada,
   notificarTransferenciaRecibida,
-  notificarOperacionFallida
+  notificarOperacionFallida,
+  notificarTarjetaBloqueada,
+  notificarTarjetaDesbloqueada
 };

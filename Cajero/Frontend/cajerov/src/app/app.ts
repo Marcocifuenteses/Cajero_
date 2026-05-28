@@ -14,8 +14,17 @@ export class App {
   protected readonly title = signal('Banco Cajero');
   private atm = inject(AtmService);
 
+  countdown = this.atm.idleCountdown;
+
   get firstName() {
     const full = this.atm.userName();
     return full ? full.split(' ')[0] : '';
+  }
+
+  // stroke-dashoffset: 0 = anillo lleno (20s), 100 = vacío (0s)
+  get ringOffset(): number {
+    const c = this.countdown();
+    if (c === null) return 100;
+    return ((20 - c) / 20) * 100;
   }
 }
