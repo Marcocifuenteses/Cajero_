@@ -6,42 +6,123 @@
       <p class="admin-subtitle">Desbloqueo de tarjetas</p>
     </div>
 
-    <form class="admin-form" (ngSubmit)="desbloquear()">
-      <label class="field">
-        <span class="field-label">Número de tarjeta</span>
-        <input
-          class="field-input"
-          name="numeroTarjeta"
-          [(ngModel)]="numeroTarjeta"
-          placeholder="0000 0000 0000 0000"
-          required
-          autocomplete="off"
-        />
-      </label>
+    <!-- Indicador de pasos -->
+    <div class="steps">
+      <div class="step-dot" [class.active]="step() === 'datos'"      [class.done]="step() !== 'datos'">1</div>
+      <div class="step-line" [class.done]="step() === 'codigo' || step() === 'desbloquear'"></div>
+      <div class="step-dot" [class.active]="step() === 'codigo'"     [class.done]="step() === 'desbloquear'">2</div>
+      <div class="step-line" [class.done]="step() === 'desbloquear'"></div>
+      <div class="step-dot" [class.active]="step() === 'desbloquear'">3</div>
+    </div>
 
-      <label class="field">
-        <span class="field-label">Código de administrador</span>
-        <input
-          class="field-input"
-          name="adminSecret"
-          type="password"
-          [(ngModel)]="adminSecret"
-          placeholder="••••••••"
-          required
-          autocomplete="off"
-        />
-      </label>
+    <!-- Paso 1: Datos del cliente -->
+    @if (step() === 'datos') {
+      <form class="admin-form" (ngSubmit)="solicitarCodigo()">
+        <p class="step-info">Ingresa los datos del cliente para enviarle un código de verificación a su correo.</p>
 
-      @if (error()) {
-        <div class="msg error">{{ error() }}</div>
-      }
-      @if (success()) {
-        <div class="msg success">{{ success() }}</div>
-      }
+        <label class="field">
+          <span class="field-label">Correo electrónico</span>
+          <input class="field-input" name="email" type="email" [(ngModel)]="email"
+            placeholder="cliente@correo.com" required autocomplete="off" />
+        </label>
 
-      <button class="btn-submit" type="submit" [disabled]="loading()">
-        @if (loading()) { Procesando... } @else { Desbloquear tarjeta }
+        <label class="field">
+          <span class="field-label">Nombre completo</span>
+          <input class="field-input" name="nombre" [(ngModel)]="nombre"
+            placeholder="Nombre del cliente" required autocomplete="off" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Teléfono</span>
+          <input class="field-input" name="telefono" [(ngModel)]="telefono"
+            placeholder="5555-5555" required autocomplete="off" />
+        </label>
+
+        @if (error()) {
+          <div class="msg error">{{ error() }}</div>
+        }
+
+        <button class="btn-submit" type="submit" [disabled]="loading()">
+          @if (loading()) { Enviando... } @else { Enviar código al cliente }
+        </button>
+      </form>
+    }
+
+    <!-- Paso 2: Código de verificación -->
+    @if (step() === 'codigo') {
+      <form class="admin-form" (ngSubmit)="verificarCodigo()">
+        <p class="step-info">Se envió un código de 6 dígitos a <strong>{{ email }}</strong>. Solicítalo al cliente.</p>
+
+        <label class="field">
+          <span class="field-label">Código de verificación</span>
+          <input class="field-input code-input" name="codigo" [(ngModel)]="codigo"
+            placeholder="000000" maxlength="6" inputmode="numeric" required autocomplete="off" />
+        </label>
+
+        @if (error()) {
+          <div class="msg error">{{ error() }}</div>
+        }
+
+        <button class="btn-submit" type="submit" [disabled]="loading()">
+          @if (loading()) { Verificando... } @else { Verificar código }
+        </button>
+
+        <button class="btn-back" type="button" (click)="step.set('datos'); error.set('')">
+          Volver
+        </button>
+      </form>
+    }
+
+    <!-- Paso 3: Desbloquear tarjeta -->
+    @if (step() === 'desbloquear') {
+      <form class="admin-form" (ngSubmit)="desbloquear()">
+        <p class="step-info step-ok">Identidad verificada. Ingresa los datos para desbloquear la tarjeta.</p>
+
+        <label class="field">
+          <span class="field-label">Número de tarjeta</span>
+          <input class="field-input field-locked" name="numeroTarjeta" [(ngModel)]="numeroTarjeta"
+            disabled autocomplete="off" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Código de administrador</span>
+          <input class="field-input" name="adminSecret" type="password" [(ngModel)]="adminSecret"
+            placeholder="••••••••" required autocomplete="off" />
+        </label>
+
+        @if (error()) {
+          <div class="msg error">{{ error() }}</div>
+        }
+        @if (success()) {
+          <div class="msg success">{{ success() }}</div>
+        }
+
+        @if (!success()) {
+          <button class="btn-submit" type="submit" [disabled]="loading()">
+            @if (loading()) { Procesando... } @else { Desbloquear tarjeta }
+          </button>
+        }
+
+        @if (success()) {
+          <button class="btn-back" type="button" (click)="step.set('datos'); success.set(''); error.set(''); email=''; nombre=''; telefono=''; codigo=''">
+            Nueva verificación
+          </button>
+        }
+      </form>
+    }
+  </div>
+
+  <div class="log-card">
+    <div class="log-title">Registro de actividad</div>
+    <div class="log-form">
+      <input class="field-input" type="password" name="logPassword" [(ngModel)]="logPassword"
+        placeholder="Contraseña de administrador" autocomplete="off" />
+      <button class="btn-log" type="button" (click)="descargarLog()" [disabled]="loadingLog()">
+        @if (loadingLog()) { Descargando... } @else { Descargar }
       </button>
-    </form>
+    </div>
+    @if (logError()) {
+      <div class="msg error" style="margin-top:8px;">{{ logError() }}</div>
+    }
   </div>
 </div>

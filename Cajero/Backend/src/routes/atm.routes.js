@@ -6,6 +6,7 @@ const validarSesion = require('../middleware/session.middleware');
 
 
 router.post('/login', atmController.login);
+router.post('/logout', atmController.logout);
 router.post('/validate-card', atmController.validateCard);
 router.get('/cuentas/:usuario_id', validarSesion, atmController.getCuentas);
 router.post('/cambiar-pin', validarSesion, atmController.cambiarPin);
@@ -14,5 +15,4 @@ router.get('/buscar-cuenta', validarSesion, atmController.buscarCuenta);
 router.get('/historial/:cuenta_id', validarSesion, atmController.historial);
 router.post('/transferencia', validarSesion, atmController.transferencia);
 router.get('/test-email', atmController.testEmail);
-router.post('/admin/desbloquear-tarjeta', atmController.desbloquearTarjeta);
 module.exports = router;

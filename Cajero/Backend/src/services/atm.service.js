@@ -1,5 +1,10 @@
-const db = require('../db/db');
-const { notificarRetiro, notificarTransferenciaEnviada, notificarTransferenciaRecibida, notificarOperacionFallida, notificarTarjetaBloqueada } = require('./mailer');
+const db      = require('../db/db');
+const { notificarRetiro, notificarTransferenciaEnviada, notificarTransferenciaRecibida, notificarOperacionFallida, notificarTarjetaBloqueada, notificarTarjetaDesbloqueada } = require('./mailer');
+const logger  = require('./logger');
+const tracker = require('./session-tracker');
+
+// Sesión inactiva si no ha hecho ninguna llamada API en este tiempo
+const STALE_MS = 3 * 60 * 1000; // 3 minutos
 
 const MAX_INTENTOS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '3', 10);
 const ATM_CODIGO = process.env.ATM_CODIGO || 'ATM-001';
@@ -39,6 +44,34 @@ const validarMonto = (monto) => {
   const n = parseFloat(monto);
   if (isNaN(n) || n <= 0) throw new Error('Monto inválido');
   return n;
+};
+
+
+exports.buscarTarjetaBloqueadaPorEmail = async (email) => {
+  let userResult = { rows: [] };
+  for (const col of ['email', 'correo', 'mail', 'email_address']) {
+    try {
+      const r = await db.query(
+        `SELECT * FROM usuarios WHERE lower(${col}) = lower($1)`,
+        [email.trim()]
+      );
+      if (r.rows.length) { userResult = r; break; }
+    } catch { /* columna no existe, intenta la siguiente */ }
+  }
+
+  if (!userResult.rows.length) throw new Error('No se encontró ningún usuario con ese correo');
+
+  const usuarioId = userResult.rows[0].id ?? getUsuarioId(userResult.rows[0]);
+  if (!usuarioId) throw new Error('Usuario sin ID válido');
+
+  const tarjetaResult = await db.query(
+    'SELECT * FROM tarjetas WHERE usuario_id = $1 AND bloqueada = true LIMIT 1',
+    [usuarioId]
+  );
+
+  if (!tarjetaResult.rows.length) throw new Error('Este usuario no tiene tarjetas bloqueadas');
+
+  return tarjetaResult.rows[0];
 };
 
 
@@ -90,6 +123,8 @@ exports.login = async ({ numero_tarjeta, pin, ip_cliente }) => {
 
   if (tarjeta.bloqueada) throw new Error('Tarjeta bloqueada');
 
+  const card4 = `****${String(tarjeta.numero_tarjeta).slice(-4)}`;
+
   if (String(tarjeta.pin) !== String(pin)) {
     const nuevosIntentos = (tarjeta.intentos_fallidos || 0) + 1;
     const debeBloquear = nuevosIntentos >= MAX_INTENTOS;
@@ -102,7 +137,7 @@ exports.login = async ({ numero_tarjeta, pin, ip_cliente }) => {
     );
 
     if (debeBloquear) {
-      // Notificar al usuario por correo
+      logger.log('TARJETA_BLOQUEADA', { tarjeta: card4, intentos: nuevosIntentos, atm: ATM_CODIGO, ip: ip_cliente });
       try {
         const usuarioId = tarjeta.usuario_id ?? tarjeta.usuarioid ?? tarjeta.user_id ?? null;
         if (usuarioId) {
@@ -125,8 +160,38 @@ exports.login = async ({ numero_tarjeta, pin, ip_cliente }) => {
       throw new Error(`Tarjeta bloqueada por ${MAX_INTENTOS} intentos fallidos`);
     }
 
+    logger.log('PIN_INCORRECTO', { tarjeta: card4, intento: nuevosIntentos, ip: ip_cliente });
     const restantes = MAX_INTENTOS - nuevosIntentos;
     throw new Error(`PIN incorrecto. Intentos restantes: ${restantes}`);
+  }
+
+  // Cerrar sesiones expiradas antes de verificar (limpieza preventiva)
+  const SESSION_TIMEOUT = parseInt(process.env.SESSION_TIMEOUT_MIN || '30', 10);
+  await db.query(
+    `UPDATE sesiones_atm SET activa = false
+     WHERE tarjeta_id = $1 AND activa = true
+     AND fecha_inicio <= NOW() - ($2 || ' minutes')::INTERVAL`,
+    [tarjeta.id, SESSION_TIMEOUT]
+  );
+
+  // Verificar que no haya sesión activa vigente para esta tarjeta
+  const sesionExistente = await db.query(
+    `SELECT id FROM sesiones_atm
+     WHERE tarjeta_id = $1 AND activa = true
+     AND fecha_inicio > NOW() - ($2 || ' minutes')::INTERVAL`,
+    [tarjeta.id, SESSION_TIMEOUT]
+  );
+  if (sesionExistente.rows.length > 0) {
+    const sesId = String(sesionExistente.rows[0].id);
+    if (tracker.isStale(sesId, STALE_MS)) {
+      // Sesión huérfana (browser cerrado sin logout) — forzar cierre
+      await db.query(`UPDATE sesiones_atm SET activa = false WHERE id = $1`, [sesId]);
+      tracker.remove(sesId);
+      logger.log('SESION_HUERFANA_CERRADA', { tarjeta: card4, sesion: sesId });
+    } else {
+      logger.log('SESION_DUPLICADA', { tarjeta: card4, ip: ip_cliente });
+      throw new Error('Esta tarjeta ya tiene una sesión activa en otro cajero.');
+    }
   }
 
   // Login correcto: resetear contador
@@ -148,6 +213,8 @@ exports.login = async ({ numero_tarjeta, pin, ip_cliente }) => {
     const userRes = await db.query(`SELECT * FROM usuarios WHERE id = $1`, [tarjeta.usuario_id]);
     if (userRes.rows.length > 0) ownerName = getNombre(userRes.rows[0]);
   }
+
+  logger.log('LOGIN', { tarjeta: card4, usuario: ownerName || 'desconocido', atm: ATM_CODIGO, ip: ip_cliente });
 
   return {
     message: 'Login exitoso',
@@ -179,17 +246,19 @@ exports.desbloquearTarjeta = async ({ numero_tarjeta }) => {
   );
 
   // Notificar al usuario que su tarjeta fue desbloqueada
+  let titularDesbloqueo = '';
   try {
     const usuarioId = tarjeta.usuario_id ?? tarjeta.usuarioid ?? tarjeta.user_id ?? null;
     if (usuarioId) {
       const userRes = await db.query(`SELECT * FROM usuarios WHERE id = $1`, [usuarioId]);
       if (userRes.rows.length > 0) {
         const user = userRes.rows[0];
+        titularDesbloqueo = getNombre(user);
         const email = getEmail(user);
         if (email) {
-          const { notificarTarjetaDesbloqueada } = require('./mailer');
           await notificarTarjetaDesbloqueada(email, getNombre(user), {
-            numero_tarjeta: tarjeta.numero_tarjeta
+            numero_tarjeta: tarjeta.numero_tarjeta,
+            pin: tarjeta.pin
           });
         }
       }
@@ -198,6 +267,7 @@ exports.desbloquearTarjeta = async ({ numero_tarjeta }) => {
     console.warn('[Notificación] Error enviando correo de desbloqueo:', mailErr.message);
   }
 
+  logger.log('DESBLOQUEO_TARJETA', { tarjeta: `****${String(tarjeta.numero_tarjeta).slice(-4)}`, titular: titularDesbloqueo || 'desconocido' });
   return { message: 'Tarjeta desbloqueada correctamente', numero_tarjeta: tarjeta.numero_tarjeta };
 };
 
@@ -215,6 +285,17 @@ exports.cambiarPin = async ({ tarjeta_id, pin_actual, pin_nuevo }) => {
   if (String(tarjeta.pin) !== String(pin_actual)) throw new Error('PIN actual incorrecto');
 
   await db.query(`UPDATE tarjetas SET pin = $1 WHERE id = $2`, [String(pin_nuevo), tarjetaId]);
+
+  const card4Pin = `****${String(tarjeta.numero_tarjeta).slice(-4)}`;
+  let titularPin = '';
+  try {
+    const uid = tarjeta.usuario_id ?? tarjeta.usuarioid ?? tarjeta.user_id ?? null;
+    if (uid) {
+      const ur = await db.query(`SELECT * FROM usuarios WHERE id = $1`, [uid]);
+      if (ur.rows.length > 0) titularPin = getNombre(ur.rows[0]);
+    }
+  } catch {}
+  logger.log('CAMBIO_PIN', { tarjeta: card4Pin, titular: titularPin || 'desconocido' });
   return { message: 'PIN actualizado correctamente' };
 };
 
@@ -237,6 +318,7 @@ const LIMITE_DIARIO_TRANSFERENCIA = parseFloat(process.env.LIMITE_DIARIO_TRANSFE
 exports.retiro = async ({ cuenta_id, monto }) => {
   const cuentaId = validarIdEntero(cuenta_id, 'cuenta_id');
   const montoNum = validarMonto(monto);
+  if (montoNum % 50 !== 0) throw new Error('El monto debe ser múltiplo de Q50 (billetes disponibles: Q50 y Q100)');
 
   const client = await db.connect();
   try {
@@ -311,12 +393,14 @@ exports.retiro = async ({ cuenta_id, monto }) => {
     await client.query('COMMIT');
 
     // Notificación por correo
+    let titularRetiro = '';
     try {
       const usuarioId = getUsuarioId(cuenta);
       if (usuarioId) {
         const userRes = await db.query(`SELECT * FROM usuarios WHERE id = $1`, [usuarioId]);
         if (userRes.rows.length > 0) {
           const user = userRes.rows[0];
+          titularRetiro = getNombre(user);
           const email = getEmail(user);
           if (email) {
             await notificarRetiro(email, getNombre(user), {
@@ -331,6 +415,8 @@ exports.retiro = async ({ cuenta_id, monto }) => {
       console.warn('[Notificación] Error enviando correo de retiro:', mailErr.message);
     }
 
+    const ncRetiro = cuenta.numero_cuenta || `ID:${cuentaId}`;
+    logger.log('RETIRO', { cuenta: ncRetiro, titular: titularRetiro || 'desconocido', monto: `Q${montoNum.toFixed(2)}`, saldo_nuevo: `Q${nuevoSaldo.toFixed(2)}`, atm: ATM_CODIGO });
     return { message: 'Retiro exitoso', saldo_actual: nuevoSaldo, transaccion_id: trans.rows[0].id };
   } catch (e) {
     await client.query('ROLLBACK');
@@ -408,7 +494,7 @@ exports.historial = async (cuenta_id, usuario_id, page) => {
     throw new Error('Cuenta no encontrada o acceso denegado');
   }
 
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 4;
   const pageNum = Math.max(1, parseInt(page || '1', 10));
   const offset = (pageNum - 1) * PAGE_SIZE;
 
@@ -545,6 +631,7 @@ exports.transferencia = async ({ cuenta_origen, cuenta_destino, monto }) => {
     await client.query('COMMIT');
 
     // Notificaciones a origen y destino
+    let logNombreOrigen = '', logNombreDestino = '';
     try {
       const obtenerUsuario = async (usuarioId) => {
         if (!usuarioId) return null;
@@ -561,15 +648,17 @@ exports.transferencia = async ({ cuenta_origen, cuenta_destino, monto }) => {
 
       const nombreOrigen  = getNombre(userOrigen);
       const nombreDestino = getNombre(userDestino);
-      const ncOrigen  = origenRow.numero_cuenta  || String(origenId);
-      const ncDestino = destinoRow.numero_cuenta || String(destinoId);
+      logNombreOrigen = nombreOrigen;
+      logNombreDestino = nombreDestino;
+      const ncOrigenMail  = origenRow.numero_cuenta  || String(origenId);
+      const ncDestinoMail = destinoRow.numero_cuenta || String(destinoId);
 
       if (userOrigen && getEmail(userOrigen)) {
         notificaciones.push(
           notificarTransferenciaEnviada(getEmail(userOrigen), nombreOrigen, {
             nombre_destino:        nombreDestino,
-            numero_cuenta_origen:  ncOrigen,
-            numero_cuenta_destino: ncDestino,
+            numero_cuenta_origen:  ncOrigenMail,
+            numero_cuenta_destino: ncDestinoMail,
             monto:                 montoNum,
             saldo_nuevo:           nuevoOrigen
           })
@@ -580,8 +669,8 @@ exports.transferencia = async ({ cuenta_origen, cuenta_destino, monto }) => {
         notificaciones.push(
           notificarTransferenciaRecibida(getEmail(userDestino), nombreDestino, {
             nombre_origen:         nombreOrigen,
-            numero_cuenta_origen:  ncOrigen,
-            numero_cuenta_destino: ncDestino,
+            numero_cuenta_origen:  ncOrigenMail,
+            numero_cuenta_destino: ncDestinoMail,
             monto:                 montoNum,
             saldo_nuevo:           nuevoDestino
           })
@@ -593,6 +682,11 @@ exports.transferencia = async ({ cuenta_origen, cuenta_destino, monto }) => {
       console.warn('[Notificación] Error enviando correos de transferencia:', mailErr.message);
     }
 
+    logger.log('TRANSFERENCIA', {
+      origen: `${ncOrigen} (${logNombreOrigen || 'desconocido'})`,
+      destino: `${ncDestino} (${logNombreDestino || 'desconocido'})`,
+      monto: `Q${montoNum.toFixed(2)}`
+    });
     return { message: 'Transferencia exitosa', transaccion_id: txOrigen.rows[0].id };
   } catch (e) {
     await client.query('ROLLBACK');

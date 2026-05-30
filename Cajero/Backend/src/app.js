@@ -1,12 +1,14 @@
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
+const cors    = require('cors');
+const helmet  = require('helmet');
 const rateLimit = require('express-rate-limit');
+const fs   = require('fs');
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
-const atmRoutes = require('./routes/atm.routes');
+const atmRoutes    = require('./routes/atm.routes');
 const atmController = require('./controllers/atm.controller');
+const { LOG_PATH } = require('./services/logger');
 
 const app = express();
 
@@ -36,6 +38,22 @@ const loginLimiter = rateLimit({
 });
 
 app.use('/atm/login', loginLimiter);
+app.post('/atm/admin/descargar-log', (req, res) => {
+  const secret = req.headers['x-admin-secret'] || req.body?.admin_secret;
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Contraseña incorrecta' });
+  }
+  if (!fs.existsSync(LOG_PATH)) {
+    return res.status(404).json({ error: 'No hay registros aún' });
+  }
+  const fecha = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Disposition', `attachment; filename="actividad_${fecha}.log"`);
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  fs.createReadStream(LOG_PATH).pipe(res);
+});
+
+app.post('/atm/admin/solicitar-codigo',    atmController.solicitarCodigoAdmin);
+app.post('/atm/admin/verificar-codigo',    atmController.verificarCodigoAdmin);
 app.post('/atm/admin/desbloquear-tarjeta', atmController.desbloquearTarjeta);
 app.use('/atm', atmRoutes);
 

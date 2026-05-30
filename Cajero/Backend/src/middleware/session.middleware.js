@@ -1,4 +1,5 @@
-const db = require('../db/db');
+const db      = require('../db/db');
+const tracker = require('../services/session-tracker');
 
 const SESSION_TIMEOUT_MIN = parseInt(process.env.SESSION_TIMEOUT_MIN || '30', 10);
 
@@ -30,6 +31,7 @@ const validarSesion = async (req, res, next) => {
       return res.status(401).json({ error: 'Sesión expirada. Por favor inicia sesión nuevamente.' });
     }
 
+    tracker.touch(sesion_id);
     req.sesion = result.rows[0];
     next();
   } catch (e) {

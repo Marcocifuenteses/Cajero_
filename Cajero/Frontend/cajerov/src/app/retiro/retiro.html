@@ -168,11 +168,19 @@
       class="input"
       type="number"
       [(ngModel)]="monto"
-      placeholder="0.00"
-      min="0.01"
-      step="0.01"
+      placeholder="50, 100, 150..."
+      min="50"
+      step="50"
     />
   </label>
+  @if (montoSugerido) {
+    <p class="monto-hint">
+      ¿Quisiste decir
+      <button type="button" class="monto-hint-btn" (click)="monto = montoSugerido">
+        Q {{ montoSugerido | number:'1.0-0' }}
+      </button>?
+    </p>
+  }
 
   <div class="actions">
     <button class="btn secondary" routerLink="/menu">Volver</button>

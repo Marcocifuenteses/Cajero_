@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AtmService } from '../atm.service';
+import { descargarPdfRetiro } from '../pdf-comprobante.util';
 
 @Component({
   standalone: true,
@@ -47,6 +48,13 @@ export class Retiro implements OnInit {
     this.monto = value;
   }
 
+  get montoSugerido(): number | null {
+    const m = Number(this.monto);
+    if (!m || m <= 0 || m % 50 === 0) return null;
+    const redondeado = Math.round(m / 50) * 50;
+    return redondeado > 0 ? redondeado : 50;
+  }
+
   get cuentaSeleccionadaObj() {
     return this.cuentas().find(c => String(c.id) === this.cuentaSeleccionada) || null;
   }
@@ -60,6 +68,10 @@ export class Retiro implements OnInit {
       this.error.set('Seleccione cuenta y monto válido');
       return;
     }
+    if (monto % 50 !== 0) {
+      this.error.set('El monto debe ser múltiplo de Q50 (billetes disponibles: Q50 y Q100)');
+      return;
+    }
     this.confirmando.set(true);
   }
 
@@ -68,7 +80,7 @@ export class Retiro implements OnInit {
   }
 
   imprimir() {
-    window.print();
+    descargarPdfRetiro(this.comprobante());
   }
 
   async enviarRetiro() {

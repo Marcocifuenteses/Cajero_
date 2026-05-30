@@ -24,7 +24,8 @@ export class AtmService {
   private readonly WARN_SECS  = 20;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
-  private boundReset = () => this.resetIdle();
+  private boundReset  = () => this.resetIdle();
+  private boundUnload = () => this.sessionBeacon();
 
   constructor(private http: HttpClient, private router: Router) {
     if (typeof window !== 'undefined' && window?.localStorage) {
@@ -64,6 +65,8 @@ export class AtmService {
     ['click', 'keydown', 'touchstart'].forEach(e =>
       document.addEventListener(e, this.boundReset, { passive: true })
     );
+    window.addEventListener('beforeunload', this.boundUnload);
+    window.addEventListener('pagehide', this.boundUnload);
     this.resetIdle();
   }
 
@@ -71,9 +74,21 @@ export class AtmService {
     ['click', 'keydown', 'touchstart'].forEach(e =>
       document.removeEventListener(e, this.boundReset)
     );
+    window.removeEventListener('beforeunload', this.boundUnload);
+    window.removeEventListener('pagehide', this.boundUnload);
     if (this.idleTimer) clearTimeout(this.idleTimer);
     this.idleTimer = null;
     this.clearCountdown();
+  }
+
+  private sessionBeacon() {
+    const sesId = this.sessionId();
+    if (!sesId) return;
+    const blob = new Blob(
+      [JSON.stringify({ sesion_id: sesId })],
+      { type: 'application/json' }
+    );
+    navigator.sendBeacon(`${this.baseUrl}/logout`, blob);
   }
 
   private resetIdle() {
@@ -107,7 +122,12 @@ export class AtmService {
   }
 
   logout() {
+    const sesId = this.sessionId();
     this.stopIdleWatcher();
+    if (sesId) {
+      this.http.post(`${this.baseUrl}/logout`, {}, { headers: this.headers })
+        .subscribe({ error: () => {} });
+    }
     localStorage.removeItem('sesionId');
     localStorage.removeItem('usuarioId');
     localStorage.removeItem('userName');

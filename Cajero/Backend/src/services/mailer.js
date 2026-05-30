@@ -335,7 +335,44 @@ function htmlTarjetaBloqueada({ nombre, numero_tarjeta, intentos, atm_codigo }) 
 }
 
 
-function htmlTarjetaDesbloqueada({ nombre, numero_tarjeta }) {
+function htmlCodigoAdmin(nombre, codigo) {
+  const cuerpo = `
+    <p style="margin:0 0 4px;color:rgba(226,245,226,0.45);font-size:13px;">Hola,</p>
+    <h2 style="margin:0 0 24px;color:#e2f5e2;font-size:20px;font-weight:700;">
+      ${nombre}
+    </h2>
+
+    <div style="display:inline-block;background:rgba(99,102,241,0.1);color:#818cf8;
+                border:1px solid rgba(99,102,241,0.3);border-radius:20px;
+                padding:6px 16px;font-size:12px;font-weight:700;
+                margin-bottom:24px;font-family:'Courier New',Courier,monospace;
+                letter-spacing:1px;text-transform:uppercase;">
+      &#128274; Verificación de administrador
+    </div>
+
+    <div style="background:rgba(99,102,241,0.06);border-left:3px solid #6366f1;
+                border-radius:8px;padding:24px;margin-bottom:24px;text-align:center;">
+      <p style="margin:0 0 12px;color:rgba(226,245,226,0.4);font-size:11px;
+                text-transform:uppercase;letter-spacing:2px;
+                font-family:'Courier New',Courier,monospace;">
+        Código de verificación
+      </p>
+      <p style="margin:0;color:#818cf8;font-size:44px;font-weight:700;
+                font-family:'Courier New',Courier,monospace;letter-spacing:14px;">
+        ${codigo}
+      </p>
+    </div>
+
+    <p style="margin:0;color:rgba(226,245,226,0.4);font-size:12px;line-height:1.6;
+              font-family:'Courier New',Courier,monospace;text-align:center;">
+      Válido por 10 minutos. No compartas este código.
+    </p>
+  `;
+  return layoutBase('Código de verificación — Fintech ATM', cuerpo);
+}
+
+
+function htmlTarjetaDesbloqueada({ nombre, numero_tarjeta, pin }) {
   const cardLabel = numero_tarjeta
     ? `•••• •••• •••• ${String(numero_tarjeta).slice(-4)}`
     : 'N/D';
@@ -367,6 +404,23 @@ function htmlTarjetaDesbloqueada({ nombre, numero_tarjeta }) {
       ${fila('Estado', '<span style="color:#4ade80;font-weight:700;">Activa</span>')}
       ${fila('Fecha y hora', formatFecha())}
     </table>
+
+    ${pin ? `
+    <div style="margin-top:24px;background:rgba(99,102,241,0.06);border-left:3px solid #6366f1;
+                border-radius:8px;padding:20px 24px;">
+      <p style="margin:0 0 8px;color:rgba(226,245,226,0.4);font-size:11px;
+                text-transform:uppercase;letter-spacing:2px;
+                font-family:'Courier New',Courier,monospace;">
+        Tu PIN
+      </p>
+      <p style="margin:0;color:#818cf8;font-size:36px;font-weight:700;
+                font-family:'Courier New',Courier,monospace;letter-spacing:10px;">
+        ${pin}
+      </p>
+      <p style="margin:8px 0 0;color:rgba(226,245,226,0.3);font-size:11px;">
+        No compartas tu PIN con nadie.
+      </p>
+    </div>` : ''}
 
     <p style="margin:24px 0 0;color:rgba(226,245,226,0.4);font-size:12px;line-height:1.6;
               font-family:'Courier New',Courier,monospace;">
@@ -506,6 +560,16 @@ async function notificarTarjetaBloqueada(email, nombre, datos) {
 }
 
 
+async function enviarCodigoAdmin(email, nombre, codigo) {
+  return enviar({
+    to: email,
+    subject: 'Código de verificación — Administración Fintech ATM',
+    html: htmlCodigoAdmin(nombre, codigo),
+    text: `Hola ${nombre}, tu código de verificación es: ${codigo}. Válido por 10 minutos. No lo compartas.`
+  });
+}
+
+
 // Mantiene compatibilidad con el endpoint /atm/test-email
 async function sendEmail({ to, subject, text, html }) {
   return enviar({ to, subject, text, html });
@@ -514,6 +578,7 @@ async function sendEmail({ to, subject, text, html }) {
 
 module.exports = {
   sendEmail,
+  enviarCodigoAdmin,
   notificarRetiro,
   notificarTransferenciaEnviada,
   notificarTransferenciaRecibida,

@@ -7,11 +7,13 @@
 .admin-wrapper {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   background: #0f1117;
   font-family: 'Segoe UI', system-ui, sans-serif;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
 }
 
 .admin-card {
@@ -26,7 +28,7 @@
 
 .admin-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
 }
 
 .admin-icon {
@@ -46,10 +48,76 @@
   color: #6b7280;
 }
 
+/* ── Indicador de pasos ─────────────────── */
+
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 1.75rem;
+}
+
+.step-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #2a2d3a;
+  border: 2px solid #3a3d4a;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.step-dot.active {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+  color: #818cf8;
+}
+
+.step-dot.done {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #2a2d3a;
+  max-width: 60px;
+  transition: background 0.3s;
+}
+
+.step-line.done {
+  background: #6366f1;
+}
+
+/* ── Formulario ─────────────────────────── */
+
 .admin-form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+.step-info {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.step-info strong {
+  color: #c4c9d4;
+}
+
+.step-info.step-ok {
+  color: #4ade80;
 }
 
 .field {
@@ -75,15 +143,35 @@
   padding: 0.75rem 1rem;
   outline: none;
   transition: border-color 0.2s;
+  width: 100%;
 }
 
 .field-input:focus {
   border-color: #6366f1;
 }
 
+.field-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.1rem;
+}
+
 .field-input::placeholder {
   color: #3d4051;
 }
+
+.code-input {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5rem;
+  color: #818cf8;
+  padding: 0.85rem 1rem;
+}
+
+/* ── Mensajes ───────────────────────────── */
 
 .msg {
   border-radius: 8px;
@@ -102,6 +190,8 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
   color: #4ade80;
 }
+
+/* ── Botones ────────────────────────────── */
 
 .btn-submit {
   background: #6366f1;
@@ -123,4 +213,74 @@
 .btn-submit:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.log-card {
+  background: #1a1d27;
+  border: 1px solid #2a2d3a;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.log-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.log-form {
+  display: flex;
+  gap: 8px;
+}
+
+.log-form .field-input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.btn-log {
+  background: #2a2d3a;
+  border: 1px solid #3a3d4a;
+  border-radius: 8px;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0 1rem;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-log:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+  color: #818cf8;
+}
+
+.btn-log:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1px solid #2a2d3a;
+  border-radius: 8px;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.65rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-back:hover {
+  border-color: #4b5563;
+  color: #9ca3af;
 }

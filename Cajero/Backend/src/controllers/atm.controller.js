@@ -1,5 +1,13 @@
+const crypto  = require('crypto');
+const db      = require('../db/db');
 const service = require('../services/atm.service');
-const mailer = require('../services/mailer');
+const mailer  = require('../services/mailer');
+const logger  = require('../services/logger');
+const tracker = require('../services/session-tracker');
+
+// In-memory stores para verificación admin (sin BD)
+const codigosPendientes = new Map(); // email -> { codigo, expiresAt }
+const tokensActivos     = new Map(); // token -> { email, expiresAt }
 
 exports.login = async (req, res) => {
   try {
@@ -85,16 +93,101 @@ exports.buscarCuenta = async (req, res) => {
   }
 };
 
+exports.solicitarCodigoAdmin = async (req, res) => {
+  const { email, nombre, telefono } = req.body || {};
+  if (!email || !nombre || !telefono) {
+    return res.status(400).json({ error: 'Completa todos los campos' });
+  }
+
+  let tarjeta;
+  try {
+    tarjeta = await service.buscarTarjetaBloqueadaPorEmail(email);
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
+
+  const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+  codigosPendientes.set(email.toLowerCase(), {
+    codigo,
+    expiresAt: Date.now() + 10 * 60 * 1000,
+    numero_tarjeta: tarjeta.numero_tarjeta,
+    tarjeta_id: tarjeta.id,
+  });
+
+  try {
+    await mailer.enviarCodigoAdmin(email.trim(), nombre.trim(), codigo);
+    logger.log('ADMIN_CODIGO_SOLICITADO', { email: email.trim(), nombre: nombre.trim(), telefono: telefono.trim() });
+    return res.json({ ok: true });
+  } catch (e) {
+    codigosPendientes.delete(email.toLowerCase());
+    return res.status(500).json({ error: 'Error al enviar el correo' });
+  }
+};
+
+exports.verificarCodigoAdmin = (req, res) => {
+  const { email, codigo } = req.body || {};
+  if (!email || !codigo) {
+    return res.status(400).json({ error: 'Faltan campos requeridos' });
+  }
+
+  const key   = email.toLowerCase();
+  const entry = codigosPendientes.get(key);
+
+  if (!entry || Date.now() > entry.expiresAt) {
+    codigosPendientes.delete(key);
+    return res.status(400).json({ error: 'Código expirado. Solicita uno nuevo.' });
+  }
+
+  if (entry.codigo !== codigo.trim()) {
+    return res.status(400).json({ error: 'Código incorrecto' });
+  }
+
+  const { numero_tarjeta, tarjeta_id } = entry;
+  codigosPendientes.delete(key);
+
+  const token = crypto.randomBytes(32).toString('hex');
+  tokensActivos.set(token, { email: key, expiresAt: Date.now() + 15 * 60 * 1000, numero_tarjeta, tarjeta_id });
+
+  return res.json({ ok: true, session_token: token, numero_tarjeta });
+};
+
 exports.desbloquearTarjeta = async (req, res) => {
   const secret = req.headers['x-admin-secret'] || req.body?.admin_secret;
   if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
     return res.status(403).json({ error: 'No autorizado' });
   }
+
+  const token = req.body?.session_token;
+  if (!token) {
+    return res.status(403).json({ error: 'Se requiere verificación previa' });
+  }
+
+  const tokenEntry = tokensActivos.get(token);
+  if (!tokenEntry || Date.now() > tokenEntry.expiresAt) {
+    tokensActivos.delete(token);
+    return res.status(403).json({ error: 'Sesión expirada. Verifica nuevamente.' });
+  }
+
   try {
-    res.json(await service.desbloquearTarjeta(req.body));
+    const resultado = await service.desbloquearTarjeta({ numero_tarjeta: tokenEntry.numero_tarjeta });
+    tokensActivos.delete(token);
+    res.json(resultado);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
+};
+
+exports.logout = async (req, res) => {
+  const sesion_id = req.headers['sesion-id'] || req.body?.sesion_id;
+  if (sesion_id) {
+    await db.query(
+      `UPDATE sesiones_atm SET activa = false WHERE id = $1`,
+      [sesion_id]
+    ).catch(() => {});
+    tracker.remove(sesion_id);
+    logger.log('LOGOUT', { sesion: sesion_id });
+  }
+  res.json({ ok: true });
 };
 
 exports.testEmail = async (req, res) => {

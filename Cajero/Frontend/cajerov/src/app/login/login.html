@@ -60,6 +60,9 @@
 
       @if (error()) {
         <p class="error">{{ error() }}</p>
+        @if (error().toLowerCase().includes('bloqueada')) {
+          <p class="blocked-hint">Para desbloquear llama al 31412653</p>
+        }
       }
     </form>
   }
@@ -96,6 +99,9 @@
 
       @if (error()) {
         <p class="error">{{ error() }}</p>
+        @if (error().toLowerCase().includes('bloqueada')) {
+          <p class="blocked-hint">Para desbloquear llama al 31412653</p>
+        }
       }
     </form>
   }

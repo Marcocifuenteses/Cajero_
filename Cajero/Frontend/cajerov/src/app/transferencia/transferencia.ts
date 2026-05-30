@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { AtmService } from '../atm.service';
+import { descargarPdfTransferencia } from '../pdf-comprobante.util';
 
 @Component({
   standalone: true,
@@ -105,7 +106,7 @@ export class Transferencia implements OnInit {
   }
 
   imprimir() {
-    window.print();
+    descargarPdfTransferencia(this.comprobante());
   }
 
   async enviarTransferencia() {

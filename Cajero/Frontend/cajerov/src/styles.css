@@ -818,6 +818,32 @@ select.input option:disabled {
   animation: slide-down 0.3s var(--ease-smooth);
 }
 
+.blocked-hint {
+  text-align: center;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: #9ca3af;
+  animation: slide-down 0.3s var(--ease-smooth);
+}
+
+.monto-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  animation: slide-down 0.2s var(--ease-smooth);
+}
+
+.monto-hint-btn {
+  background: none;
+  border: none;
+  color: #22c55e;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .success {
   padding: 12px 14px;
   background: rgba(34,197,94,0.08);
