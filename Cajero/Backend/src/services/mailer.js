@@ -26,7 +26,8 @@ function inicializarTransporter() {
     pool: false,
     socketTimeout: 10000,
     greetingTimeout: 5000,
-    connectionTimeout: 5000
+    connectionTimeout: 5000,
+    family: 4  // forzar IPv4 (Railway falla con IPv6 hacia Gmail)
   });
 
   console.log('[Mailer] Transporter SMTP configurado con', SMTP_HOST);
