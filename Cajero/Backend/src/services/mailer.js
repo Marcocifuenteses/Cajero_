@@ -23,18 +23,13 @@ function inicializarTransporter() {
       user: SMTP_USER,
       pass: SMTP_PASS
     },
-    pool: false,           // no reutilizar conexiones (evita conexiones obsoletas)
-    socketTimeout: 30000,  // 30 s timeout por si Gmail no responde
-    greetingTimeout: 15000
+    pool: false,
+    socketTimeout: 10000,
+    greetingTimeout: 5000,
+    connectionTimeout: 5000
   });
 
-  transporter.verify((err) => {
-    if (err) {
-      console.warn('[Mailer] Advertencia SMTP al verificar conexión:', err.message);
-    } else {
-      console.log('[Mailer] Conexión SMTP verificada con', SMTP_HOST);
-    }
-  });
+  console.log('[Mailer] Transporter SMTP configurado con', SMTP_HOST);
 }
 
 inicializarTransporter();
