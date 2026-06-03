@@ -83,6 +83,16 @@ export class Retiro implements OnInit {
     descargarPdfRetiro(this.comprobante());
   }
 
+  otraOperacion() {
+    this.comprobante.set(null);
+    this.atm.reautenticar();
+  }
+
+  cerrarSesion() {
+    this.comprobante.set(null);
+    this.atm.logout();
+  }
+
   async enviarRetiro() {
     if (this.cargando()) return;
     this.error.set('');

@@ -1,8 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AtmService } from '../atm.service';
 import { descargarPdfTransferencia } from '../pdf-comprobante.util';
 
@@ -32,6 +31,7 @@ export class Transferencia implements OnInit {
 
   private atm = inject(AtmService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   userName = this.atm.userName;
 
   get firstName() {
@@ -107,6 +107,16 @@ export class Transferencia implements OnInit {
 
   imprimir() {
     descargarPdfTransferencia(this.comprobante());
+  }
+
+  otraOperacion() {
+    this.comprobante.set(null);
+    this.atm.reautenticar();
+  }
+
+  cerrarSesion() {
+    this.comprobante.set(null);
+    this.atm.logout();
   }
 
   async enviarTransferencia() {

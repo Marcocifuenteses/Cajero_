@@ -12,7 +12,7 @@ const validarSesion = async (req, res, next) => {
 
   try {
     const result = await db.query(
-      `SELECT s.*, t.usuario_id
+      `SELECT s.*, t.usuario_id, t.tipo_tarjeta
        FROM sesiones_atm s
        JOIN tarjetas t ON t.id = s.tarjeta_id
        WHERE s.id = $1

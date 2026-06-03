@@ -220,6 +220,7 @@ exports.login = async ({ numero_tarjeta, pin, ip_cliente }) => {
     message: 'Login exitoso',
     tarjeta_id: tarjeta.id,
     usuario_id: tarjeta.usuario_id,
+    tipo_tarjeta: tarjeta.tipo_tarjeta || 'debito',
     owner_name: ownerName,
     sesion: sesion.rows[0]
   };
@@ -300,13 +301,21 @@ exports.cambiarPin = async ({ tarjeta_id, pin_actual, pin_nuevo }) => {
 };
 
 
-exports.getCuentas = async (usuario_id) => {
+exports.getCuentas = async (usuario_id, tarjeta_id, tipo_tarjeta) => {
   const id = validarIdEntero(usuario_id, 'usuario_id');
 
-  const result = await db.query(
-    `SELECT * FROM cuentas WHERE usuario_id = $1`,
-    [id]
-  );
+  let result;
+  if (tipo_tarjeta === 'credito') {
+    result = await db.query(
+      `SELECT * FROM cuentas WHERE tarjeta_id = $1 AND activa = true`,
+      [tarjeta_id]
+    );
+  } else {
+    result = await db.query(
+      `SELECT * FROM cuentas WHERE usuario_id = $1 AND lower(tipo_cuenta) != 'credito' AND activa = true`,
+      [id]
+    );
+  }
 
   return result.rows;
 };
@@ -459,7 +468,7 @@ exports.buscarCuentaPorTelefono = async (telefono) => {
   const cuentasRes = await db.query(
     `SELECT id, tipo_cuenta, numero_cuenta, moneda, activa
      FROM cuentas
-     WHERE usuario_id = $1 AND activa = true`,
+     WHERE usuario_id = $1 AND activa = true AND lower(tipo_cuenta) != 'credito'`,
     [usuario.id]
   );
 

@@ -25,6 +25,17 @@ export class Login implements OnDestroy {
   private readonly IDLE_MS = 2 * 60 * 1000;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
 
+  constructor() {
+    if (typeof window !== 'undefined' && history.state?.skipToPin) {
+      const tarjeta = this.atm.numeroTarjeta();
+      if (tarjeta) {
+        this.numeroTarjeta = tarjeta;
+        this.step.set('pin');
+        this.resetIdleLogin();
+      }
+    }
+  }
+
   get firstName() {
     const full = this.userName();
     return full ? full.split(' ')[0] : '';

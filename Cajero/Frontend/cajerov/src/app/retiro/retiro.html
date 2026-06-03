@@ -69,8 +69,11 @@
           </div>
         }
         <div class="modal-actions">
-          <button class="btn secondary" type="button" (click)="comprobante.set(null)">Cerrar</button>
           <button class="btn primary" type="button" (click)="imprimir()">Imprimir</button>
+        </div>
+        <div class="modal-actions modal-actions-post">
+          <button class="btn secondary" type="button" (click)="otraOperacion()">Otra operación</button>
+          <button class="btn danger" type="button" (click)="cerrarSesion()">Cerrar sesión</button>
         </div>
       </div>
     </div>

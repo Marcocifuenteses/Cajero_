@@ -8,6 +8,7 @@ interface LoginResponse {
   message: string;
   tarjeta_id: number;
   usuario_id: number;
+  tipo_tarjeta?: string;
   owner_name?: string;
   sesion: { id: number };
 }
@@ -18,9 +19,11 @@ export class AtmService {
   sessionId = signal<string | null>(null);
   usuarioId = signal<number>(0);
   userName = signal<string>('');
+  numeroTarjeta = signal<string>('');
+  tipoTarjeta = signal<string>('debito');
   idleCountdown = signal<number | null>(null);
 
-  private readonly IDLE_MS    = 2 * 60 * 1000;
+  private readonly IDLE_MS    = 45 * 1000;
   private readonly WARN_SECS  = 20;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
@@ -32,9 +35,13 @@ export class AtmService {
       const savedSesion = localStorage.getItem('sesionId');
       const savedUsuario = Number(localStorage.getItem('usuarioId') || '0');
       const savedName = localStorage.getItem('userName') || '';
+      const savedTarjeta = localStorage.getItem('numeroTarjeta') || '';
+      const savedTipo    = localStorage.getItem('tipoTarjeta') || 'debito';
       this.sessionId.set(savedSesion && savedSesion !== 'null' ? savedSesion : null);
       this.usuarioId.set(savedUsuario);
       this.userName.set(savedName);
+      this.numeroTarjeta.set(savedTarjeta);
+      this.tipoTarjeta.set(savedTipo);
       if (this.sessionId()) this.startIdleWatcher();
     }
   }
@@ -131,10 +138,31 @@ export class AtmService {
     localStorage.removeItem('sesionId');
     localStorage.removeItem('usuarioId');
     localStorage.removeItem('userName');
+    localStorage.removeItem('numeroTarjeta');
+    localStorage.removeItem('tipoTarjeta');
     this.sessionId.set(null);
     this.usuarioId.set(0);
     this.userName.set('');
+    this.numeroTarjeta.set('');
+    this.tipoTarjeta.set('debito');
     this.router.navigate(['/']);
+  }
+
+  reautenticar() {
+    const sesId = this.sessionId();
+    this.stopIdleWatcher();
+    if (sesId) {
+      this.http.post(`${this.baseUrl}/logout`, {}, { headers: this.headers })
+        .subscribe({ error: () => {} });
+    }
+    localStorage.removeItem('sesionId');
+    localStorage.removeItem('usuarioId');
+    localStorage.removeItem('userName');
+    // Mantener numeroTarjeta y tipoTarjeta para el paso PIN
+    this.sessionId.set(null);
+    this.usuarioId.set(0);
+    this.userName.set('');
+    this.router.navigate(['/'], { state: { skipToPin: true } });
   }
 
   async login(numero_tarjeta: string, pin: string) {
@@ -145,6 +173,10 @@ export class AtmService {
       })
     );
 
+    localStorage.setItem('numeroTarjeta', numero_tarjeta);
+    localStorage.setItem('tipoTarjeta', response.tipo_tarjeta || 'debito');
+    this.numeroTarjeta.set(numero_tarjeta);
+    this.tipoTarjeta.set(response.tipo_tarjeta || 'debito');
     this.saveSession(String(response.sesion.id), response.usuario_id, response.owner_name || '');
     this.startIdleWatcher();
     return response;

@@ -35,7 +35,7 @@ exports.getCuentas = async (req, res) => {
       return res.status(403).json({ error: 'Acceso denegado' });
     }
 
-    res.json(await service.getCuentas(requestedId));
+    res.json(await service.getCuentas(requestedId, req.sesion.tarjeta_id, req.sesion.tipo_tarjeta));
   } catch (e) {
     console.error('Error en getCuentas:', e);
     res.status(500).json({ error: 'Error al obtener cuentas' });
