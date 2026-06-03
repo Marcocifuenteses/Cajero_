@@ -1,14 +1,9 @@
--- ============================================================
---  CAJERO ATM — Script de base de datos
---  PostgreSQL
--- ============================================================
+-- CAJERO ATM - Script de base de datos - PostgreSQL
 
 -- Para resetear completamente, ejecuta primero:
 -- DROP TABLE IF EXISTS transferencias, retiros, transacciones, sesiones_atm, cuentas, tarjetas, usuarios CASCADE;
 
--- ============================================================
---  TABLAS
--- ============================================================
+-- TABLAS
 
 CREATE TABLE usuarios (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -93,13 +88,11 @@ CREATE TABLE transferencias (
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ============================================================
---  DATOS DE PRUEBA
--- ============================================================
+-- DATOS DE PRUEBA
 
 -- Usuario 1: Marco Antonio Cifuentes Escobar
 INSERT INTO usuarios (nombres, apellidos, dpi, telefono, correo, direccion, estado)
-VALUES ('Marco Antonio', 'Cifuentes Escobar', '00000000', '31412653', 'escobarcifuentesantoniomarco@gmail.com', 'Avenida Circunvalación', true);
+VALUES ('Marco Antonio', 'Cifuentes Escobar', '00000000', '31412653', 'escobarcifuentesantoniomarco@gmail.com', 'Avenida Circunvalacion', true);
 
 INSERT INTO tarjetas (usuario_id, numero_tarjeta, pin, fecha_vencimiento, cvv, tipo_tarjeta)
 VALUES (1, '1000100010001000', '3141', '11/30', '124', 'debito');
