@@ -1,3 +1,6 @@
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first'); // forzar IPv4 en Railway
+
 const express = require('express');
 const cors    = require('cors');
 const helmet  = require('helmet');
