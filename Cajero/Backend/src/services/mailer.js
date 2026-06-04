@@ -1,39 +1,18 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const FROM_EMAIL = process.env.FROM_EMAIL || SMTP_USER;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Fintech ATM <onboarding@resend.dev>';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
-let transporter = null;
+let resend = null;
 
-function inicializarTransporter() {
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    console.warn('[Mailer] SMTP no configurado. Los correos de notificación están deshabilitados.');
-    return;
-  }
-
-  transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS
-    },
-    pool: false,
-    socketTimeout: 10000,
-    greetingTimeout: 5000,
-    connectionTimeout: 5000,
-    family: 4  // forzar IPv4 (Railway falla con IPv6 hacia Gmail)
-  });
-
-  console.log('[Mailer] Transporter SMTP configurado con', SMTP_HOST);
+if (RESEND_API_KEY) {
+  resend = new Resend(RESEND_API_KEY);
+  console.log('[Mailer] Resend configurado correctamente');
+} else {
+  console.warn('[Mailer] RESEND_API_KEY no configurada. Correos deshabilitados.');
 }
-
-inicializarTransporter();
 
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -474,21 +453,26 @@ function htmlOperacionFallida({ nombre, tipo, monto, motivo, saldo_actual }) {
 // ─── Funciones públicas de notificación ─────────────────────────────────────
 
 async function enviar({ to, subject, html, text }) {
-  if (!transporter) {
-    console.warn(`[Mailer] Sin transporter — correo no enviado a ${to}`);
+  if (!resend) {
+    console.warn(`[Mailer] Sin Resend — correo no enviado a ${to}`);
     return;
   }
 
-  const info = await transporter.sendMail({
-    from: `"Fintech ATM" <${FROM_EMAIL}>`,
+  const { data, error } = await resend.emails.send({
+    from: FROM_EMAIL,
     to,
     subject,
-    text: text || subject,
-    html
+    html,
+    text: text || subject
   });
 
-  console.log(`[Mailer] Correo enviado a ${to} — messageId: ${info.messageId}`);
-  return info;
+  if (error) {
+    console.warn(`[Mailer] Error enviando correo a ${to}:`, error.message);
+    return;
+  }
+
+  console.log(`[Mailer] Correo enviado a ${to} — id: ${data.id}`);
+  return data;
 }
 
 
@@ -566,7 +550,6 @@ async function enviarCodigoAdmin(email, nombre, codigo) {
 }
 
 
-// Mantiene compatibilidad con el endpoint /atm/test-email
 async function sendEmail({ to, subject, text, html }) {
   return enviar({ to, subject, text, html });
 }
